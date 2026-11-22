@@ -139,14 +139,14 @@ function render(){
  if(!$('tbar')){const d=document.createElement('div');d.id='tbar';$('gr').after(d)}
  $('gr').innerHTML=G.map((g,i)=>`<button data-a="g" data-i="${i}" class="${i===U.g?'on':''}">${g}</button>`).join('');
  $('tbar').style.display=T?'flex':'none';
- $('tbar').innerHTML='<b>🔧 KHU VỰC GIÁO VIÊN</b><button class="btn" data-n="mk">📝 Tạo đề kiểm tra</button><button class="btn g" data-n="hb">📈 Học bạ &amp; phân tích</button><button class="btn g" data-n="bk">💾 Sao lưu (data.json)</button>';
+ $('tbar').innerHTML='<b>🔧 KHU VỰC GIÁO VIÊN</b><button class="btn w" data-n="mk" style="font-size:16px;padding:10px 20px">📝 TẠO ĐỀ KIỂM TRA</button><button class="btn g" data-n="hb">📈 Học bạ &amp; phân tích</button><button class="btn g" data-n="bk">💾 Sao lưu (data.json)</button>';
  $('tm').textContent=T?'🔓 Thoát chế độ giáo viên':'👩‍🏫 Giáo viên';$('bk').style.display=$('an').style.display='none';
  $('ls').innerHTML='<div class="card"><h2>'+G[U.g]+' – Danh sách bài</h2>'+(L.length?L.map(x=>`<button class="li ${les&&x.id===les.id?'on':''}" data-a="l" data-id="${x.id}">${esc(x.n)}</button>`).join(''):'<p class="s">Chưa có bài nào.</p>')+(T?'<div class="row" style="margin-top:10px"><input id="nl" placeholder="Bài 1: …"><button class="btn" data-a="al">+ Thêm bài</button></div>':'')+'</div>';
  if(!les){$('mn').innerHTML='<div class="card">'+(T?'Hãy thêm bài học đầu tiên ở khung bên trái.':'Lớp này chưa có bài học.')+'</div>';return}
  const sec=SECS.find(s=>s[0]===U.s),ai=U.s!=='kt';
  const body=U.s==='on'?practice(les,T):U.s==='vd'?vdBody(les,T):U.s==='kt'?ktBody(les,L):media(les,U.s,T,U.s==='tt');
  $('mn').innerHTML=`<div class="card hd">${T?`<input id="lt" value="${esc(les.n)}" style="font-size:20px;font-weight:700"><input id="lc" value="${esc(les.c||'')}" placeholder="Thuộc chương (vd: Chương 1 – Di truyền)" style="margin-top:8px"><button class="btn g sm" data-a="dl" style="margin-top:8px">🗑️ Xóa bài này</button>`:`<h2 style="font-size:22px">${esc(les.n)}</h2>`}</div>
-<div class="tabs">${SECS.map(([k,i,n,c])=>`<button style="--c:${c}" data-a="s" data-k="${k}" class="${k===U.s?'on':''}">${i} ${n}</button>`).join('')}</div>
+<div class="tabs">${SECS.map(([k,i,n,c])=>`<button style="--c:${c}" data-a="s" data-k="${k}" class="${k===U.s?'on':''}">${i} ${n}</button>`).join('')}${T?'<button style="--c:#b8860b" data-n="mk">🛠️ TẠO ĐỀ KIỂM TRA</button>':''}</div>
 <div class="mw ${ai?'':'one'}"><div class="card"><h2>${sec[1]} ${sec[2]}</h2>${body}</div>${ai?aiCard(les,T):''}</div>`;
  document.querySelectorAll('img[data-bid]').forEach(async im=>{const bl=await dbop('readonly',o=>o.get(im.dataset.bid));if(bl)im.src=URL.createObjectURL(bl)})}
 

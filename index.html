@@ -69,6 +69,16 @@ img.inf{max-width:100%;border-radius:12px;margin:8px 0;display:block}
 .nbk:hover{background:#1b46a0}
 .nbkw::after{content:"";display:block;width:min(360px,70%);height:6px;margin:5px auto 0;border-radius:9px;background:linear-gradient(90deg,#ffd23f,#ff8a3d,#e5484d)}
 header .sub{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;opacity:1;font-size:clamp(11px,1.9vw,18px);font-weight:800;letter-spacing:.5px;margin-top:5px;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+header .sp{display:none}
+header>.nbkw{order:1;flex:1 1 auto;margin:0;text-align:center}
+header>.btn{order:2}
+.nbkw::after{display:none}
+.nbk{clip-path:none;background:rgba(255,255,255,.62);color:#9b0a1e;border-radius:12px;padding:6px 26px;font-size:clamp(20px,2.8vw,34px);font-weight:900;letter-spacing:.3px}
+.nbk:hover{background:rgba(255,255,255,.82)}
+@media (max-width:900px){header>.nbkw{flex:0 0 100%;order:3;margin-top:6px}}
+@media (min-width:1180px){header{flex-wrap:nowrap}header>.nbkw{min-width:0}}
+.nbk{padding:5px 18px;font-size:clamp(18px,2.1vw,30px);white-space:nowrap}
+@media (max-width:1179px){header>.nbkw{flex:0 0 100%;order:3;margin-top:6px}header>.sp{display:none}}
 </style>
 </head>
 <body>
