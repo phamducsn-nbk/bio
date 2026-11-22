@@ -18,7 +18,7 @@ document.head.append(st);
 /* ---------- Thông tin học sinh (không còn hỏi vai trò) ---------- */
 const gate=()=>$('gate')||(()=>{const d=document.createElement('div');d.id='gate';document.body.append(d);return d})();
 function stuForm(){const f=idForm().replace('id="tnm"','id="gn"').replace('id="tcl"','id="gc"');
- gate().innerHTML=`<div class="gb"><div style="font-size:34px">🌿🦋🧬🐞🌱</div><h1>HỆ THỐNG TỰ HỌC KHTN &amp; SINH HỌC</h1><p class="s" style="margin-top:10px">Nhập họ tên và lớp để lưu kết quả học tập của em.</p>${f}
+ gate().innerHTML=`<div class="gb"><div style="font-size:34px">🌿🦋🧬🐞🌱</div><h1>HỆ THỐNG TỰ HỌC KHTN &amp; SINH HỌC</h1><p class="s" style="margin-top:10px">Hãy nhập họ tên và lớp để hệ thống ghi nhận nỗ lực học tập của con.</p>${f}
 <div id="gw" class="s" style="color:#e5484d;min-height:22px;margin-top:6px"></div><button class="btn w" data-gk="go" style="font-size:18px;padding:12px 30px">▶ VÀO HỌC</button>
 <div><button class="skip" data-gk="skip">Bỏ qua</button></div>
 ${typeof gvHtml==='function'?gvHtml():''}
