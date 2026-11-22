@@ -16,6 +16,19 @@ nav button,.tabs button{font-size:15px;font-weight:700}
 .hb{display:flex;gap:8px;align-items:center;flex:none;margin-left:auto}
 .hb .btn{white-space:nowrap}
 html:not(.m) header{flex-wrap:wrap}
+@media (min-width:1100px){
+ html:not(.m) body header{flex-wrap:nowrap}
+ html:not(.m) body header>.ht{flex:none}
+ html:not(.m) body header>.nbkw{order:2;flex:1 1 0;min-width:0;flex-direction:column;flex-wrap:nowrap;gap:6px;margin:0}
+ html:not(.m) body header>.hb{order:3;margin-left:0}
+ html:not(.m) body .nbk{font-size:clamp(16px,1.6vw,26px)}
+ html:not(.m) body .stats{font-size:13px}
+}
+.aq{background:var(--pri2);padding:8px 12px;border-radius:12px 12px 12px 4px;margin:10px 0 4px;font-weight:600;word-break:break-word}
+.aa{background:var(--bg);border:1px solid var(--bd);padding:8px 12px;border-radius:12px;white-space:pre-wrap;line-height:1.55;word-break:break-word}
+#ail{max-height:60vh;overflow-y:auto;margin-top:6px}
+.ft2{text-align:center;font-size:12px;color:var(--mut);padding:18px 12px calc(18px + env(safe-area-inset-bottom,0px))}
+.ft2 a{color:var(--mut);text-decoration:underline;cursor:pointer;margin:0 8px}
 html:not(.m) header>.nbkw{flex:0 0 100%;order:3;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px 18px;margin:2px 0 0}
 html:not(.m) .stats{margin-top:0}
 #vm .vl{margin-left:4px}

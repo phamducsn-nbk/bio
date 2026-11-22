@@ -51,14 +51,26 @@ function ktBody(les,L){
 <button class="btn w" data-n="kgo" style="font-size:17px">▶ Bắt đầu làm bài</button>`}
 
 /* ---------- Hỏi AI ---------- */
-function aiCard(les,T){return `<div class="card"><h2>🤖 Hỏi trợ lý AI</h2><p class="s">Đặt câu hỏi về bài “${esc(les.n)}”.</p><textarea id="aiq" style="min-height:90px" placeholder="Ví dụ: Giải thích giúp em…"></textarea><button class="btn" data-n="ai" style="margin-top:8px">Gửi câu hỏi</button><div id="aia" style="display:none"></div>${T?`<input id="aie" value="${esc(store.get('bio_ai',''))}" placeholder="(GV) Link máy chủ AI – bỏ trống thì mở Claude" style="margin-top:10px">`:''}</div>`}
+const AIH={};
+const aiEp=()=>{const u=D._ai||store.get('bio_ai','');return /^https:\/\//.test(u)?u:''};
+const aiFmt=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#+\s*/gm,'');
+const aiLog=id=>(AIH[id]||[]).map(m=>`<div class="aq">🙋 ${esc(m.q)}</div><div class="aa">${m.p?'⏳ Đang suy nghĩ…':aiFmt(m.a)}</div>`).join('');
+function aiCard(les,T){const ep=aiEp();return `<div class="card aic"><h2>🤖 Hỏi trợ lý AI</h2><p class="s">Đặt câu hỏi về bài “${esc(les.n)}”. Câu trả lời hiện ngay bên dưới.</p><textarea id="aiq" maxlength="500" style="min-height:80px" placeholder="Ví dụ: Giải thích giúp em…"></textarea><button class="btn" data-n="ai" id="aib" style="margin-top:8px">Gửi câu hỏi</button><p class="s" id="ain" style="margin:8px 0 0;color:#e5484d">${ep?'':(T?'Chưa có link máy chủ AI – dán vào ô bên dưới (xem ai-worker.js).':'Trợ lý AI chưa được bật. Em hãy hỏi giáo viên nhé.')}</p><div id="ail">${aiLog(les.id)}</div>${T?`<input id="aie" value="${esc(D._ai||store.get('bio_ai',''))}" placeholder="(Quản trị) Link máy chủ AI https://…workers.dev" style="margin-top:10px"><p class="s">Sau khi dán link: bấm Sao lưu và tải data.json lên GitHub để học sinh dùng được.</p>`:''}</div>`}
 async function aiAsk(){
- const{les}=cur(),q=($('aiq').value||'').trim();if(!q)return;const ep=store.get('bio_ai',''),box=$('aia');
- const pr=`Mình là học sinh ${G[U.g]}, đang học bài "${les.n}" môn KHTN/Sinh học. Câu hỏi: ${q}\nHãy giải thích dễ hiểu, ngắn gọn bằng tiếng Việt.`;
- box.style.cssText='display:block;margin-top:10px;padding:10px;background:var(--pri2);border-radius:10px;white-space:pre-wrap';
- if(/^https:\/\//.test(ep)){box.textContent='Đang suy nghĩ…';
-  try{const t=await (await fetch(ep,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({prompt:pr})})).text();let a=t;try{const j=JSON.parse(t);a=j.answer||j.a||t}catch(x){}box.textContent=a}catch(x){box.textContent='Không kết nối được trợ lý AI, hãy thử lại sau.'}}
- else{window.open('https://claude.ai/new?q='+encodeURIComponent(pr),'_blank','noopener');box.textContent='Đã mở trợ lý AI ở tab mới với câu hỏi của em.'}}
+ const{les}=cur(),qe=$('aiq'),q=(qe.value||'').trim();if(!q)return;
+ const ep=aiEp(),H=AIH[les.id]||(AIH[les.id]=[]);
+ if(!ep){$('ain').textContent=U.t?'Chưa có link máy chủ AI – dán vào ô bên dưới (xem ai-worker.js).':'Trợ lý AI chưa được bật. Em hãy hỏi giáo viên nhé.';return}
+ $('ain').textContent='';
+ const hist=H.filter(m=>!m.p&&m.a).slice(-3).map(m=>({q:m.q,a:m.a})),it={q,a:'',p:true};
+ H.unshift(it);qe.value='';$('ail').innerHTML=aiLog(les.id);
+ const btn=$('aib');btn.disabled=true;btn.textContent='Đang trả lời…';
+ const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),30000);
+ try{const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({q,lesson:les.n,grade:G[U.g],history:hist}),signal:ac.signal});
+  const t=await r.text();let a=t;try{const j=JSON.parse(t);a=j.answer||j.error||t}catch(x){}
+  it.a=r.ok?a:'Xin lỗi, trợ lý AI đang bận. Em thử lại sau ít phút nhé.'}
+ catch(x){it.a='Không kết nối được trợ lý AI. Em kiểm tra mạng rồi thử lại nhé.'}
+ clearTimeout(tm);it.p=false;
+ if($('ail')&&cur().les&&cur().les.id===les.id){$('ail').innerHTML=aiLog(les.id);const b=$('aib');b.disabled=false;b.textContent='Gửi câu hỏi'}}
 
 /* ---------- Giáo viên: tạo đề, xuất Word ---------- */
 const mkSel=(id,on)=>{TE.sel=TE.sel.filter(x=>x!==id);if(on)TE.sel.push(id)};
@@ -128,7 +140,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.id==='kn'){SX.n=Math.max(1,Math.min(60,+t.value||10));render()}
  else if(t.id==='lex'){cur().les.ex=t.value;save();render()}
  else if(t.id==='lvd'){cur().les.vd=t.value;save();render()}
- else if(t.id==='aie')store.set('bio_ai',t.value.trim());
+ else if(t.id==='aie'){D._ai=t.value.trim();save();render()}
  else if(t.id==='mg'){TE.g=+t.value;TE.sel=[];mkInline()?render():mkOpen()}
  else if(t.dataset.m==='ch'){t.closest('details').querySelectorAll('[data-m=ls]').forEach(c=>{c.checked=t.checked;mkSel(c.dataset.id,t.checked)})}
  else if(t.dataset.m==='ls')mkSel(t.dataset.id,t.checked);
