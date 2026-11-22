@@ -239,7 +239,7 @@ function idForm(){const R=D._cls||{},ks=Object.keys(R);
 let RS=store.get('bio_res',[]),RM=[],AF={c:'',t:'',q:''};
 const EP=()=>store.get('bio_ep','');
 function tsRec(){const r={ts:Date.now(),n:P.nm,c:P.cl,t:P.t,m:P.m,h:P.h,q:P.q.length,s:P.s,d:Math.round((Date.now()-P.t0s)/1000)};let h;
- if(!r.n||!r.c)h='<p class="s">Bạn chưa chọn lớp và tên nên kết quả không được ghi lại.</p>';
+ if(!r.n||!r.c)h='<p class="s">Con chưa chọn lớp và tên nên kết quả không được ghi lại.</p>';
  else{RS.push(r);store.set('bio_res',RS);const u=[P.e,EP()].find(x=>/^https:\/\/script\.google\.com\//.test(x||''));
   if(u){try{fetch(u,{method:'POST',mode:'no-cors',body:JSON.stringify(r)}).catch(()=>{})}catch(e){}}
   h='<p class="s">✅ Đã ghi kết quả'+(u?' và gửi cho giáo viên.':' trên thiết bị này.')+' Nếu giáo viên yêu cầu, chép mã này để gửi:</p><div class="row"><input id="rc" readonly value="'+esc(JSON.stringify(r))+'" style="flex:1"><button class="btn g" data-ts="cp" data-v="rc">Chép</button></div>'}

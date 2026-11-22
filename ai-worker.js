@@ -13,7 +13,7 @@
 */
 const MODEL='claude-haiku-5-5';
 const SYSTEM='Bạn là trợ lý học tập môn Khoa học tự nhiên và Sinh học cho học sinh Việt Nam (lớp 6–12). '
- +'Trả lời bằng tiếng Việt, đúng kiến thức chương trình, giải thích dễ hiểu, ngắn gọn (tối đa khoảng 150 từ), có ví dụ gần gũi khi cần. '
+ +'Xưng là "thầy/cô" và gọi học sinh là "con". Trả lời bằng tiếng Việt, đúng kiến thức chương trình, giải thích dễ hiểu, ngắn gọn (tối đa khoảng 150 từ), có ví dụ gần gũi khi cần. '
  +'Viết văn bản thường, không dùng ký hiệu markdown như #, *, **. '
  +'Chỉ trả lời các câu hỏi liên quan đến bài học và khoa học; với nội dung khác hãy lịch sự mời học sinh quay lại bài học. '
  +'Nếu học sinh nhờ giải thẳng đáp án bài kiểm tra, hãy gợi ý cách nghĩ thay vì chỉ đưa đáp án.';
@@ -48,7 +48,7 @@ export default{
    if(!r.ok)return out({error:'Trợ lý AI đang bận, thử lại sau.'},502);
    const j=await r.json();
    const text=(j.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('\n').trim();
-   return out({answer:text||'Mình chưa có câu trả lời, em thử hỏi lại nhé.'})}
+   return out({answer:text||'Thầy/cô chưa có câu trả lời, con thử hỏi lại nhé.'})}
   catch(e){return out({error:'Không kết nối được trợ lý AI.'},502)}
  }
 };

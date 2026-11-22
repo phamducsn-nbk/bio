@@ -30,7 +30,7 @@ ${ks.length?`<b>1. Chủ đề</b>${ks.map(k=>`<label class="it" style="justify-
 <b>2. Cấu trúc đề</b><div class="row" style="margin:6px 0">TN <input id="xtn" type="number" min="0" value="${s.tn}" style="width:70px"> ĐS <input id="xds" type="number" min="0" value="${s.ds}" style="width:70px"> TL <input id="xtl" type="number" min="0" value="${s.tl}" style="width:70px"> Thời gian <input id="xmin" type="number" min="1" value="${s.min}" style="width:80px"> phút</div>
 <input id="xtt" value="${esc(s.title)}" placeholder="Tên đề">${idf()}
 <div class="row" style="margin-top:12px"><button class="btn" data-x="go">▶ Thi ngay</button>${U.t?'<button class="btn w" data-x="share">🔗 Link / QR / mã cho lớp</button>':''}</div>`:'<p class="s">Chưa có ngân hàng đề thi thử.</p>'}
-<div class="row" style="margin-top:10px">${U.t?'<button class="btn g" data-x="edit">✏️ Soạn ngân hàng đề</button>':''}<button class="btn g" data-x="mine">📈 Học bạ của em</button></div>
+<div class="row" style="margin-top:10px">${U.t?'<button class="btn g" data-x="edit">✏️ Soạn ngân hàng đề</button>':''}<button class="btn g" data-x="mine">📈 Học bạ của con</button></div>
 <hr style="border:0;border-top:1px solid var(--bd);margin:14px 0"><b>Có mã hoặc link đề từ giáo viên?</b><div class="row" style="margin-top:6px"><input id="xcd" placeholder="Dán link hoặc mã" style="flex:1"><button class="btn g" data-x="code">Vào thi</button></div>`)}
 
 function exEdit(t){
@@ -89,7 +89,7 @@ function exSubmit(){
  modal(`<h2 style="margin:0">🏁 Điểm: ${s10}/10</h2><p class="s">${esc(d.t)}</p>${note}
 ${tbl(['Phần','Điểm','Tối đa'],['tn','ds','tl'].filter(y=>ty[y][1]).map(y=>[TYN[y],+ty[y][0].toFixed(2),ty[y][1]]))}
 <b>Câu chưa đúng hết (${bad.length})</b>${bad.map(([i,q])=>`<div class="it"><span>Câu ${i+1}: ${esc(q.q)}<br><small class="s">Đáp án: ${esc(ans(q))}</small></span></div>`).join('')}
-<div class="row" style="margin-top:12px"><button class="btn" data-x="again">🔁 Làm lại</button><button class="btn g" data-x="close">Đóng</button><button class="btn g" data-x="mine">📈 Học bạ của em</button></div>`)}
+<div class="row" style="margin-top:12px"><button class="btn" data-x="again">🔁 Làm lại</button><button class="btn g" data-x="close">Đóng</button><button class="btn g" data-x="mine">📈 Học bạ của con</button></div>`)}
 
 document.addEventListener('click',async e=>{
  const b=e.target.closest('[data-x]');if(!b)return;const a=b.dataset.x;

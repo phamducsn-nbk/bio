@@ -52,14 +52,16 @@ function ktBody(les,L){
 
 /* ---------- Hỏi AI ---------- */
 const AIH={};
-const aiEp=()=>{const u=D._ai||store.get('bio_ai','');return /^https:\/\//.test(u)?u:''};
+/* Dán link máy chủ AI (Cloudflare Worker) vào giữa hai dấu nháy để bật trợ lý AI cho TẤT CẢ học sinh, ví dụ: const AI_URL='https://bio-ai.ten.workers.dev'; */
+const AI_URL='';
+const aiEp=()=>{const u=AI_URL||D._ai||store.get('bio_ai','');return /^https:\/\//.test(u)?u:''};
 const aiFmt=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#+\s*/gm,'');
 const aiLog=id=>(AIH[id]||[]).map(m=>`<div class="aq">🙋 ${esc(m.q)}</div><div class="aa">${m.p?'⏳ Đang suy nghĩ…':aiFmt(m.a)}</div>`).join('');
-function aiCard(les,T){const ep=aiEp();return `<div class="card aic"><h2>🤖 Hỏi trợ lý AI</h2><p class="s">Đặt câu hỏi về bài “${esc(les.n)}”. Câu trả lời hiện ngay bên dưới.</p><textarea id="aiq" maxlength="500" style="min-height:80px" placeholder="Ví dụ: Giải thích giúp em…"></textarea><button class="btn" data-n="ai" id="aib" style="margin-top:8px">Gửi câu hỏi</button><p class="s" id="ain" style="margin:8px 0 0;color:#e5484d">${ep?'':(T?'Chưa có link máy chủ AI – dán vào ô bên dưới (xem ai-worker.js).':'Trợ lý AI chưa được bật. Em hãy hỏi giáo viên nhé.')}</p><div id="ail">${aiLog(les.id)}</div>${T?`<input id="aie" value="${esc(D._ai||store.get('bio_ai',''))}" placeholder="(Quản trị) Link máy chủ AI https://…workers.dev" style="margin-top:10px"><p class="s">Sau khi dán link: bấm Sao lưu và tải data.json lên GitHub để học sinh dùng được.</p>`:''}</div>`}
+function aiCard(les,T){const ep=aiEp();return `<div class="card aic"><h2>🤖 Hỏi trợ lý AI</h2><p class="s">Đặt câu hỏi về bài “${esc(les.n)}”. Câu trả lời hiện ngay bên dưới.</p><textarea id="aiq" maxlength="500" style="min-height:80px" placeholder="Ví dụ: Giải thích giúp con…"></textarea><button class="btn" data-n="ai" id="aib" style="margin-top:8px">Gửi câu hỏi</button><p class="s" id="ain" style="margin:8px 0 0;color:#e5484d">${ep?'':(T?'Chưa có link máy chủ AI – dán vào ô bên dưới (xem ai-worker.js).':'Trợ lý AI chưa được bật. Con hãy hỏi giáo viên nhé.')}</p><div id="ail">${aiLog(les.id)}</div>${T?`<input id="aie" value="${esc(D._ai||store.get('bio_ai',''))}" placeholder="(Quản trị) Link máy chủ AI https://…workers.dev" style="margin-top:10px"><p class="s">Sau khi dán link: bấm Sao lưu và tải data.json lên GitHub để học sinh dùng được.</p>`:''}</div>`}
 async function aiAsk(){
  const{les}=cur(),qe=$('aiq'),q=(qe.value||'').trim();if(!q)return;
  const ep=aiEp(),H=AIH[les.id]||(AIH[les.id]=[]);
- if(!ep){$('ain').textContent=U.t?'Chưa có link máy chủ AI – dán vào ô bên dưới (xem ai-worker.js).':'Trợ lý AI chưa được bật. Em hãy hỏi giáo viên nhé.';return}
+ if(!ep){$('ain').textContent=U.t?'Chưa có link máy chủ AI – dán vào ô bên dưới (xem ai-worker.js).':'Trợ lý AI chưa được bật. Con hãy hỏi giáo viên nhé.';return}
  $('ain').textContent='';
  const hist=H.filter(m=>!m.p&&m.a).slice(-3).map(m=>({q:m.q,a:m.a})),it={q,a:'',p:true};
  H.unshift(it);qe.value='';$('ail').innerHTML=aiLog(les.id);
@@ -67,8 +69,8 @@ async function aiAsk(){
  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),30000);
  try{const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({q,lesson:les.n,grade:G[U.g],history:hist}),signal:ac.signal});
   const t=await r.text();let a=t;try{const j=JSON.parse(t);a=j.answer||j.error||t}catch(x){}
-  it.a=r.ok?a:'Xin lỗi, trợ lý AI đang bận. Em thử lại sau ít phút nhé.'}
- catch(x){it.a='Không kết nối được trợ lý AI. Em kiểm tra mạng rồi thử lại nhé.'}
+  it.a=r.ok?a:'Xin lỗi, trợ lý AI đang bận. Con thử lại sau ít phút nhé.'}
+ catch(x){it.a='Không kết nối được trợ lý AI. Con kiểm tra mạng rồi thử lại nhé.'}
  clearTimeout(tm);it.p=false;
  if($('ail')&&cur().les&&cur().les.id===les.id){$('ail').innerHTML=aiLog(les.id);const b=$('aib');b.disabled=false;b.textContent='Gửi câu hỏi'}}
 
