@@ -46,6 +46,8 @@ select{width:100%;border:1px solid var(--bd);background:var(--bg);color:var(--tx
 .opt.on{border-color:var(--pri);background:var(--pri2)}.opt.ok{border-color:#2bb673;background:rgba(43,182,115,.2)}.opt.no{border-color:#e5484d;background:rgba(229,72,77,.18)}
 .bar{height:8px;background:var(--pri2);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);width:100%}
 .qr{background:#fff;padding:10px;display:inline-block;border-radius:10px}.qr svg{display:block;width:220px;height:220px}
+table.pn{border-collapse:collapse;width:100%;margin:6px 0 14px}table.pn td,table.pn th{border:1px solid var(--bd);padding:6px 10px;text-align:center}table.pn th{background:var(--pri2);color:var(--pri)}
+details{margin-top:12px}summary{cursor:pointer;padding:6px 0}
 </style>
 </head>
 <body>
@@ -54,6 +56,7 @@ select{width:100%;border:1px solid var(--bd);background:var(--bg);color:var(--tx
   <div><h1>BioToolkit</h1><small>Học liệu KHTN &amp; Sinh học THPT</small></div>
   <div class="sp"></div>
   <button class="btn g" id="bk">💾 Sao lưu</button>
+  <button class="btn g" id="an" style="display:none">📊 Phân tích</button>
   <button class="btn w" id="tm"></button>
   <button class="btn g" id="theme">🌓</button>
 </header>
@@ -87,7 +90,7 @@ $('mx').onclick=()=>{$('md').style.display='none';$('mc').innerHTML=''};
 function render(){
  const T=U.t,{L,les}=cur();
  $('gr').innerHTML=G.map((g,i)=>`<button data-a="g" data-i="${i}" class="${i===U.g?'on':''}">${g}</button>`).join('');
- $('tm').textContent='✏️ Chế độ giáo viên: '+(T?'Bật':'Tắt');
+ $('tm').textContent='✏️ Chế độ giáo viên: '+(T?'Bật':'Tắt');$('an').style.display=T?'':'none';
  $('ls').innerHTML='<div class="card"><h2>'+G[U.g]+' – Danh sách bài</h2>'+
   (L.length?L.map(x=>`<button class="li ${les&&x.id===les.id?'on':''}" data-a="l" data-id="${x.id}">${esc(x.n)}</button>`).join(''):'<p class="s">Chưa có bài nào.</p>')+
   (T?'<div class="row" style="margin-top:10px"><input id="nl" placeholder="Bài 1: Giới thiệu…"><button class="btn" data-a="al">+ Thêm bài</button></div>':'')+'</div>';
@@ -139,7 +142,7 @@ $('bk').onclick=()=>{modal(`<h3 style="margin-top:0">💾 Sao lưu / khôi phụ
 /* ===== THỬ SỨC ===== */
 const LET='ABCDEFGH',MODES=[['quiz','🎯 Trắc nghiệm','Chọn đáp án đúng, mỗi câu 10 điểm'],['time','⏱️ Đua tốc độ','15 giây mỗi câu, trả lời càng nhanh càng nhiều điểm'],['card','🃏 Thẻ ghi nhớ','Lật thẻ xem đáp án, tự đánh giá đã nhớ hay chưa']],MN=Object.fromEntries(MODES.map(m=>[m[0],m[1]]));
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-let TS={g:U.g,topic:'all',mode:'quiz',num:10,nm:''},P=null,PD=null,tm=null;
+let TS={g:U.g,topic:'all',mode:'quiz',num:10,nm:'',cl:''},P=null,PD=null,tm=null;
 function parseQ(t){return (t||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const p=l.split('|').map(x=>x.trim());if(p.length<4)return null;const k=LET.indexOf(p[p.length-1].toUpperCase()),o=p.slice(1,-1);return k<0||k>=o.length?null:[p[0],o,k]}).filter(Boolean)}
 const b64=u=>{let s='';u.forEach(c=>s+=String.fromCharCode(c));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
 const unb=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
@@ -149,7 +152,7 @@ const loadQR=()=>new Promise(r=>{if(window.qrcode)return r();const s=document.cr
 function tsQs(){const L=(D[G[TS.g]]||[]).filter(x=>parseQ(x.qt).length),t=TS.topic;return (t==='all'?L:t[0]==='l'?L.filter(x=>x.id===t.slice(2)):L.filter(x=>(x.c||'')===t.slice(2))).flatMap(x=>parseQ(x.qt))}
 const deck=()=>{let q=shuffle(tsQs());return TS.num?q.slice(0,TS.num):q};
 function lbl(){const t=TS.topic,L=D[G[TS.g]]||[];return t==='all'?G[TS.g]+' – tất cả bài':t[0]==='l'?(L.find(x=>x.id===t.slice(2))||{}).n:t.slice(2)}
-function tsOpen(){const L=(D[G[TS.g]]||[]).filter(x=>parseQ(x.qt).length),ch=[...new Set(L.map(x=>x.c).filter(Boolean))];
+function tsOpen(){TS.scr='open';const L=(D[G[TS.g]]||[]).filter(x=>parseQ(x.qt).length),ch=[...new Set(L.map(x=>x.c).filter(Boolean))];
  if(TS.topic!=='all'&&!L.some(x=>'l:'+x.id===TS.topic)&&!ch.some(c=>'c:'+c===TS.topic))TS.topic='all';
  const n=tsQs().length,sel=(v,l)=>`<option value="${esc(v)}" ${TS.topic===v?'selected':''}>${esc(l)}</option>`;
  modal(`<h2 style="margin:0 0 4px">⚡ THỬ SỨC</h2><p class="s">Chọn chủ đề và hình thức, rồi chơi ngay hoặc tạo link / QR cho cả lớp.</p>
@@ -157,17 +160,17 @@ function tsOpen(){const L=(D[G[TS.g]]||[]).filter(x=>parseQ(x.qt).length),ch=[..
 <select id="tp" style="flex:2"><option value="all">Tất cả bài có câu hỏi</option>${ch.length?'<optgroup label="Theo chương">'+ch.map(c=>sel('c:'+c,c)).join('')+'</optgroup>':''}${L.length?'<optgroup label="Theo bài">'+L.map(x=>sel('l:'+x.id,x.n)).join('')+'</optgroup>':''}</select></div>
 <b>2. Hình thức</b><div style="margin:6px 0 14px">${MODES.map(([k,t,d])=>`<button class="opt ${TS.mode===k?'on':''}" data-ts="md" data-v="${k}"><b>${t}</b><br><small>${d}</small></button>`).join('')}</div>
 <b>3. Số câu</b> <select id="tn" style="width:auto">${[5,10,15,20,0].map(x=>`<option value="${x}" ${TS.num===x?'selected':''}>${x||'Tất cả'}</option>`).join('')}</select> <span class="s">(chủ đề có ${n} câu)</span>
-<input id="tnm" placeholder="Tên của bạn (không bắt buộc)" value="${esc(TS.nm)}" style="margin-top:10px">
+${idForm()}
 <div class="row" style="margin-top:14px">${n?'<button class="btn" data-ts="play">▶ Chơi ngay</button><button class="btn w" data-ts="share">🔗 Tạo link, QR &amp; mã cho lớp</button>':'<span class="s">Chủ đề này chưa có câu hỏi. Giáo viên thêm câu hỏi trong Chế độ giáo viên.</span>'}</div>
 <hr style="border:0;border-top:1px solid var(--bd);margin:16px 0"><b>Có mã hoặc link từ giáo viên?</b><div class="row" style="margin-top:6px"><input id="tcd" placeholder="Dán link hoặc mã tham gia" style="flex:1"><button class="btn g" data-ts="code">Vào chơi</button></div>`)}
-async function tsShare(){const d={t:lbl(),m:TS.mode,q:deck()},c=await enc(d),url=location.href.split('#')[0]+'#play='+c;await loadQR();let qr;
+async function tsShare(){const d={t:lbl(),m:TS.mode,q:deck(),e:EP()},c=await enc(d),url=location.href.split('#')[0]+'#play='+c;await loadQR();let qr;
  try{const x=qrcode(0,'L');x.addData(url);x.make();qr='<div class="qr">'+x.createSvgTag(4,0)+'</div>'}catch(e){qr='<p class="s">Link quá dài để tạo QR. Hãy chọn ít câu hơn.</p>'}
  modal(`<h3 style="margin:0">🔗 Chia sẻ “${esc(d.t)}”</h3><p class="s">${MN[d.m]} · ${d.q.length} câu. Học sinh quét QR hoặc mở link là chơi được, không cần tài khoản.</p><div style="text-align:center">${qr}</div>
 <p><b>Link</b></p><div class="row"><input id="sl" readonly value="${esc(url)}" style="flex:1"><button class="btn g" data-ts="cp" data-v="sl">Chép</button></div>
 <p><b>Mã tham gia</b> <small class="s">(dán vào ô “Có mã hoặc link”)</small></p><div class="row"><input id="sc" readonly value="${esc(c)}" style="flex:1"><button class="btn g" data-ts="cp" data-v="sc">Chép</button></div>
 <button class="btn g" data-ts="open" style="margin-top:12px">◀ Quay lại</button>`)}
-function tsIntro(d){PD=d;modal(`<h2 style="margin:0">⚡ ${esc(d.t)}</h2><p class="s">${MN[d.m]||''} · ${d.q.length} câu</p><input id="tnm" placeholder="Nhập tên của bạn" value="${esc(TS.nm)}"><button class="btn" data-ts="go" style="margin-top:10px">▶ Bắt đầu</button>`)}
-function tsStart(d){clearInterval(tm);PD=d;P={t:d.t,m:d.m,q:d.q.map(([q,o,k])=>({q,o:shuffle(o.map((t,i)=>({t,ok:i===k})))})),i:0,s:0,h:0,nm:TS.nm,lock:false};tsQ()}
+function tsIntro(d){TS.scr='intro';PD=d;modal(`<h2 style="margin:0">⚡ ${esc(d.t)}</h2><p class="s">${MN[d.m]||''} · ${d.q.length} câu</p>${idForm()}<button class="btn" data-ts="go" style="margin-top:10px">▶ Bắt đầu</button>`)}
+function tsStart(d){clearInterval(tm);PD=d;P={t:d.t,m:d.m,q:d.q.map(([q,o,k])=>({q,o:shuffle(o.map((t,i)=>({t,ok:i===k})))})),i:0,s:0,h:0,nm:TS.nm,cl:TS.cl,e:d.e,t0s:Date.now(),lock:false};tsQ()}
 function tsQ(){clearInterval(tm);if(P.i>=P.q.length)return tsEnd();P.lock=false;const c=P.q[P.i],ok=c.o.find(x=>x.ok).t;
  const head=`<div class="s">${esc(P.t)} · Câu ${P.i+1}/${P.q.length} · Điểm: ${P.s}</div><div class="bar"><i id="tb" style="width:${P.m==='time'?100:P.i/P.q.length*100}%"></i></div><div style="font-size:19px;font-weight:700;margin:14px 0">${esc(c.q)}</div>`;
  if(P.m==='card'){modal(head+`<div class="it" id="ta" style="display:none;background:var(--pri2);padding:12px;border-radius:10px">${esc(ok)}</div><div class="row" id="tr" style="margin-top:10px"><button class="btn" data-ts="flip">Lật thẻ</button></div>`);return}
@@ -177,7 +180,7 @@ function tsAns(i){if(P.lock)return;P.lock=true;clearInterval(tm);const c=P.q[P.i
  if(good){P.h++;P.s+=P.m==='time'?100+Math.max(0,Math.round((15000-(Date.now()-P.t0))/150)):10}
  document.querySelectorAll('#mc .opt').forEach((b,j)=>{if(c.o[j].ok)b.classList.add('ok');else if(j===i)b.classList.add('no')});
  const nx=document.createElement('button');nx.className='btn';nx.dataset.ts='next';nx.textContent=P.i+1<P.q.length?'Câu tiếp ▶':'Xem kết quả';nx.style.marginTop='8px';$('mc').append(nx)}
-function tsEnd(){const txt=(P.nm||'Học sinh')+' – '+P.t+': '+P.h+'/'+P.q.length+(P.m==='card'?' thẻ đã nhớ':' câu đúng, '+P.s+' điểm');
+function tsEnd(){setTimeout(tsRec,0);const txt=(P.nm||'Học sinh')+' – '+P.t+': '+P.h+'/'+P.q.length+(P.m==='card'?' thẻ đã nhớ':' câu đúng, '+P.s+' điểm');
  modal(`<h2 style="margin:0">🏁 Hoàn thành!</h2><p style="font-size:20px;font-weight:700">${esc(txt)}</p><p class="s">Chép dòng kết quả này gửi cho giáo viên (hoặc chụp màn hình).</p><div class="row"><input id="sr" readonly value="${esc(txt)}" style="flex:1"><button class="btn g" data-ts="cp" data-v="sr">Chép</button></div><div class="row" style="margin-top:12px"><button class="btn" data-ts="again">🔁 Chơi lại</button><button class="btn g" data-ts="open">⚡ Chủ đề khác</button></div>`)}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-ts]');if(!b)return;const a=b.dataset.ts,v=b.dataset.v;
  if(a==='md'){TS.mode=v;tsOpen()}
@@ -185,7 +188,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ts]'
  else if(a==='play'){const q=deck();if(q.length)tsStart({t:lbl(),m:TS.mode,q})}
  else if(a==='share')tsShare();
  else if(a==='code'){let s=$('tcd').value.trim();const i=s.indexOf('#play=');if(i>=0)s=s.slice(i+6);try{tsIntro(await dec(s))}catch(x){$('tcd').value='';$('tcd').placeholder='Mã hoặc link không hợp lệ'}}
- else if(a==='go'){TS.nm=($('tnm').value||'').trim();tsStart(PD)}
+ else if(a==='go'){TS.nm=($('tnm').value||'').trim();TS.cl=($('tcl').value||'').trim();if(!TS.nm||!TS.cl){if(!$('mc').querySelector('.warn'))b.insertAdjacentHTML('afterend','<p class="s warn" style="color:#e5484d">Hãy chọn / nhập đủ lớp và họ tên.</p>');return}tsStart(PD)}
  else if(a==='again')tsStart(PD);
  else if(a==='cp'){const el=$(v);el.select();try{navigator.clipboard.writeText(el.value)}catch(x){}b.textContent='✓'}
  else if(a==='ans')tsAns(+v);
@@ -193,10 +196,55 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ts]'
  else if(a==='flip'){$('ta').style.display='block';$('tr').innerHTML='<button class="btn" data-ts="ck" data-v="1">✅ Đã nhớ</button><button class="btn g" data-ts="ck" data-v="0">🔁 Chưa nhớ</button>'}
  else if(a==='ck'){if(v==='1'){P.h++;P.s+=10}P.i++;tsQ()}});
 document.addEventListener('change',e=>{const t=e.target;
- if(t.id==='tg'){TS.g=+t.value;TS.topic='all';tsOpen()}else if(t.id==='tp'){TS.topic=t.value;tsOpen()}else if(t.id==='tn'){TS.num=+t.value;tsOpen()}else if(t.id==='tnm')TS.nm=t.value.trim()});
+ if(t.id==='tg'){TS.g=+t.value;TS.topic='all';tsOpen()}else if(t.id==='tp'){TS.topic=t.value;tsOpen()}else if(t.id==='tn'){TS.num=+t.value;tsOpen()}else if(t.id==='tnm')TS.nm=t.value.trim();else if(t.id==='tcl'){TS.cl=t.value.trim();if(Object.keys(D._cls||{}).length){TS.nm='';TS.scr==='intro'?tsIntro(PD):tsOpen()}}});
 $('ts').onclick=tsOpen;
+/* ===== DANH TÍNH & GHI KẾT QUẢ ===== */
+function idForm(){const R=D._cls||{},ks=Object.keys(R);
+ if(!ks.length)return `<div class="row" style="margin-top:10px"><input id="tnm" placeholder="Họ và tên" value="${esc(TS.nm)}" style="flex:2"><input id="tcl" placeholder="Lớp (vd 12A1)" value="${esc(TS.cl)}" style="flex:1"></div>`;
+ const c=ks.includes(TS.cl)?TS.cl:'';
+ return `<div class="row" style="margin-top:10px"><select id="tcl" style="flex:1"><option value="">– Chọn lớp –</option>${ks.map(k=>`<option ${k===c?'selected':''}>${esc(k)}</option>`).join('')}</select><select id="tnm" style="flex:2"><option value="">– Chọn tên –</option>${(R[c]||[]).map(n=>`<option ${n===TS.nm?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`}
+let RS=store.get('bio_res',[]),RM=[],AF={c:'',t:'',q:''};
+const EP=()=>store.get('bio_ep','');
+function tsRec(){const r={ts:Date.now(),n:P.nm,c:P.cl,t:P.t,m:P.m,h:P.h,q:P.q.length,s:P.s,d:Math.round((Date.now()-P.t0s)/1000)};let h;
+ if(!r.n||!r.c)h='<p class="s">Bạn chưa chọn lớp và tên nên kết quả không được ghi lại.</p>';
+ else{RS.push(r);store.set('bio_res',RS);const u=[P.e,EP()].find(x=>/^https:\/\/script\.google\.com\//.test(x||''));
+  if(u){try{fetch(u,{method:'POST',mode:'no-cors',body:JSON.stringify(r)}).catch(()=>{})}catch(e){}}
+  h='<p class="s">✅ Đã ghi kết quả'+(u?' và gửi cho giáo viên.':' trên thiết bị này.')+' Nếu giáo viên yêu cầu, chép mã này để gửi:</p><div class="row"><input id="rc" readonly value="'+esc(JSON.stringify(r))+'" style="flex:1"><button class="btn g" data-ts="cp" data-v="rc">Chép</button></div>'}
+ $('mc').insertAdjacentHTML('beforeend',h)}
+/* ===== PHÂN TÍCH (giáo viên) ===== */
+const pc=r=>r.q?r.h/r.q*100:0,fp=x=>Math.round(x)+'%';
+function agg(rows,key){const m={};rows.forEach(r=>{const k=key(r),o=m[k]||(m[k]={k,n:0,p:0,b:0,s:new Set(),c:r.c,nm:r.n});o.n++;o.p+=pc(r);o.b=Math.max(o.b,pc(r));o.s.add(r.n+'|'+r.c)});return Object.values(m).map(o=>({...o,a:o.p/o.n,hs:o.s.size}))}
+const tbl=(h,rows)=>'<div style="overflow-x:auto"><table class="pn"><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+'</table></div>';
+function anView(){const all=RM.length?RM:RS,cl=[...new Set(all.map(r=>r.c).filter(Boolean))].sort(),tp=[...new Set(all.map(r=>r.t))],q=AF.q.toLowerCase();
+ const rows=all.filter(r=>(!AF.c||r.c===AF.c)&&(!AF.t||r.t===AF.t)&&(!q||String(r.n).toLowerCase().includes(q)));
+ const op=(a,v)=>a.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join(''),hs=agg(rows,r=>r.n+'|'+r.c).sort((a,b)=>b.a-a.a);
+ const csv='Thời gian,Họ tên,Lớp,Chủ đề,Hình thức,Đúng,Tổng,Điểm,Giây\n'+rows.map(r=>[new Date(r.ts).toLocaleString('vi-VN'),r.n,r.c,r.t,r.m,r.h,r.q,r.s,r.d].map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+ const rt=Object.entries(D._cls||{}).map(([k,v])=>'# '+k+'\n'+v.join('\n')).join('\n');
+ modal(`<h2 style="margin:0 0 8px">📊 Phân tích kết quả THỬ SỨC</h2>
+<div class="row"><select id="fc" style="flex:1"><option value="">Tất cả lớp</option>${op(cl,AF.c)}</select><select id="ft" style="flex:2"><option value="">Tất cả chủ đề</option>${op(tp,AF.t)}</select><input id="fq" placeholder="Tìm học sinh" value="${esc(AF.q)}" style="flex:1"></div>
+<p class="s" style="margin-top:8px">${rows.length} lượt · ${hs.length} học sinh · đúng TB ${rows.length?fp(rows.reduce((a,r)=>a+pc(r),0)/rows.length):'–'} · nguồn: ${RM.length?'Google Sheet':'thiết bị này'}</p>
+<b>Theo lớp</b>${tbl(['Lớp','Lượt','Số HS','% đúng TB'],agg(rows,r=>r.c||'?').map(o=>[esc(o.k),o.n,o.hs,fp(o.a)]))}
+<b>Theo chủ đề (thấp → cao)</b>${tbl(['Chủ đề','Lượt','Số HS','% đúng TB'],agg(rows,r=>r.t).sort((a,b)=>a.a-b.a).map(o=>[esc(o.k),o.n,o.hs,fp(o.a)]))}
+<b>Theo học sinh</b>${tbl(['Học sinh','Lớp','Lượt','% TB','% cao nhất','Ghi chú'],hs.map(o=>[esc(o.nm),esc(o.c),o.n,fp(o.a),fp(o.b),o.a<50?'⚠️ cần hỗ trợ':o.a>=80?'🌟 tốt':'']))}
+<details><summary><b>Nguồn dữ liệu · danh sách lớp · xuất CSV</b></summary>
+<p class="s">Link Google Apps Script nhận kết quả (được gắn vào link/QR THỬ SỨC):</p><div class="row"><input id="ep" value="${esc(EP())}" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1"><button class="btn g" data-an="sync">↻ Tải từ Google Sheet</button></div>
+<p class="s">Nhập mã kết quả học sinh gửi (mỗi dòng một mã):</p><textarea id="ib" style="min-height:70px"></textarea><button class="btn g sm" data-an="imp">Nhập</button>
+<p class="s">Danh sách lớp (dòng bắt đầu bằng # là tên lớp, các dòng dưới là học sinh):</p><textarea id="rt" style="min-height:120px">${esc(rt)}</textarea>
+<p class="s">CSV (theo bộ lọc hiện tại):</p><textarea readonly style="min-height:90px">${esc(csv)}</textarea>
+<button class="btn g sm" data-an="clr" style="margin-top:8px">🗑️ Xóa dữ liệu trên máy này</button></details>`)}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-an]');if(!b)return;const a=b.dataset.an;
+ if(a==='sync'){const u=EP();if(!u)return;try{const v=await (await fetch(u)).json();RM=v.filter(x=>typeof x[5]==='number').map(x=>({ts:x[0],n:String(x[1]),c:String(x[2]),t:String(x[3]),m:String(x[4]),h:x[5],q:x[6],s:x[7],d:x[8]}))}catch(x){}anView()}
+ else if(a==='imp'){$('ib').value.split('\n').forEach(l=>{try{const r=JSON.parse(l);if(r&&r.n&&r.q&&typeof r.h==='number')RS.push({ts:+r.ts||Date.now(),n:String(r.n),c:String(r.c||''),t:String(r.t||''),m:String(r.m||''),h:+r.h,q:+r.q,s:+r.s||0,d:+r.d||0})}catch(x){}});store.set('bio_res',RS);anView()}
+ else if(a==='clr'){if(twice(b,'clr')){RS=[];RM=[];store.set('bio_res',RS);anView()}}});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id==='fc'){AF.c=t.value;anView()}else if(t.id==='ft'){AF.t=t.value;anView()}else if(t.id==='fq'){AF.q=t.value.trim();anView()}
+ else if(t.id==='ep')store.set('bio_ep',t.value.trim());
+ else if(t.id==='rt'){const R={};let k='';t.value.split('\n').map(s=>s.trim()).filter(Boolean).forEach(l=>{if(l[0]==='#'){k=l.replace(/^#+\s*/,'');if(k)R[k]=[]}else if(k)R[k].push(l)});D._cls=R;save()}});
+$('an').onclick=anView;
 async function tsBoot(){const h=location.hash;if(h.startsWith('#play=')){try{tsIntro(await dec(h.slice(6)))}catch(e){modal('<p>Link hoặc mã không hợp lệ.</p>')}}}
-(async()=>{if(!Object.keys(D).length){try{const r=await fetch('data.json');if(r.ok){const v=await r.json();if(v&&typeof v==='object'){D=v;save()}}}catch(e){}}render();tsBoot()})();
+(async()=>{if(!Object.keys(D).length){try{const r=await fetch('data.json');if(r.ok){const v=await r.json();if(v&&typeof v==='object'){D=v;save()}}}catch(e){}}if(!U.t)try{const r=await fetch('data.json');if(r.ok){const v=await r.json();if(v&&v._cls)D._cls=v._cls}}catch(e){}render();tsBoot()})();
 </script>
+<script src="hocba.js"></script>
+<script src="thithu.js"></script>
 </body>
 </html>
