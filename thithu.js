@@ -45,8 +45,8 @@ function build(){
  s.topics.forEach(k=>parse(B[k],k).forEach(q=>pool[q.y].push(q)));
  return{kind:'exam',t:s.title||'Đề thi thử',min:+s.min||45,q:['tn','ds','tl'].flatMap(y=>shuffle(pool[y]).slice(0,s[y])),e:EP()}}
 
-async function exShare(){
- const d=build();if(!d.q.length)return;
+async function exShare(d0){
+ const d=d0||build();if(!d.q.length)return;
  const c=await enc(d),url=location.href.split('#')[0]+'#play='+c;await loadQR();let qr;
  try{const x=qrcode(0,'L');x.addData(url);x.make();qr='<div class="qr">'+x.createSvgTag(4,0)+'</div>'}catch(e){qr='<p class="s">Link quá dài để tạo QR – hãy giảm số câu.</p>'}
  modal(`<h3 style="margin:0">🔗 ${esc(d.t)}</h3><p class="s">${d.q.length} câu · ${d.min} phút. Học sinh quét QR hoặc mở link là vào thi.</p><div style="text-align:center">${qr}</div>
@@ -89,11 +89,12 @@ function exSubmit(){
  modal(`<h2 style="margin:0">🏁 Điểm: ${s10}/10</h2><p class="s">${esc(d.t)}</p>${note}
 ${tbl(['Phần','Điểm','Tối đa'],['tn','ds','tl'].filter(y=>ty[y][1]).map(y=>[TYN[y],+ty[y][0].toFixed(2),ty[y][1]]))}
 <b>Câu chưa đúng hết (${bad.length})</b>${bad.map(([i,q])=>`<div class="it"><span>Câu ${i+1}: ${esc(q.q)}<br><small class="s">Đáp án: ${esc(ans(q))}</small></span></div>`).join('')}
-<div class="row" style="margin-top:12px"><button class="btn" data-x="again">🔁 Làm lại</button><button class="btn g" data-x="hub">📝 Đề khác</button><button class="btn g" data-x="mine">📈 Học bạ của em</button></div>`)}
+<div class="row" style="margin-top:12px"><button class="btn" data-x="again">🔁 Làm lại</button><button class="btn g" data-x="close">Đóng</button><button class="btn g" data-x="mine">📈 Học bạ của em</button></div>`)}
 
 document.addEventListener('click',async e=>{
  const b=e.target.closest('[data-x]');if(!b)return;const a=b.dataset.x;
  if(a==='hub')exOpen();
+ else if(a==='close')$('mx').click();
  else if(a==='go'){const d=build();if(!d.q.length)return;X.req=0;exIntro(d)}
  else if(a==='share')exShare();
  else if(a==='edit')exEdit();
@@ -126,4 +127,5 @@ const st=document.createElement('style');
 st.textContent='.xb{position:fixed;right:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:20;border:0;cursor:pointer;background:var(--pri);color:var(--card);padding:10px 16px;border-radius:14px;font:700 15px inherit;font-family:inherit;box-shadow:0 6px 18px rgba(0,0,0,.25)}';
 document.head.append(st);
 const fb=document.createElement('button');fb.className='xb';fb.textContent='📝 THI THỬ';fb.onclick=exOpen;document.body.append(fb);
+window.exX=X;window.exParse=parse;window.exNz=nz;window.exIntroPub=exIntro;window.exShareD=exShare;
 })();
