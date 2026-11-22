@@ -12,6 +12,8 @@ nav button,.tabs button{font-size:15px;font-weight:700}
 .li,.opt{font-size:16px}
 #gate .gr button{font-size:20px;font-weight:800}
 .lay>*,.mw>*,.two>*{min-width:0}
+/* tiêu đề banner (máy tính): các chữ dàn đều bằng độ dài dòng cụm từ bên dưới */
+html:not(.m) header .ht h1{display:flex;justify-content:space-between;gap:.25em;white-space:nowrap}
 .tabs{flex-wrap:wrap}
 .hb{display:flex;gap:8px;align-items:center;flex:none;margin-left:auto}
 .hb .btn{white-space:nowrap}
