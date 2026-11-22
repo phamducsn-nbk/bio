@@ -15,6 +15,8 @@ nav button,.tabs button{font-size:15px;font-weight:700}
 .tabs{flex-wrap:wrap}
 .hb{display:flex;gap:8px;align-items:center;flex:none;margin-left:auto}
 .hb .btn{white-space:nowrap}
+html.m .stats{flex-wrap:nowrap;white-space:nowrap;max-width:100%}
+html.m .nbk{white-space:nowrap}
 html:not(.m) header{flex-wrap:wrap}
 @media (min-width:1100px){
  html:not(.m) body header{flex-wrap:nowrap}
@@ -104,6 +106,7 @@ function apply(){
  const narrow=mq.matches,m=mode==='m'||(mode==='auto'&&narrow);
  R.classList.toggle('m',m);R.classList.toggle('fm',mode==='m'&&!narrow);
  const want=mode==='d'?'width=1100':VP;if(meta&&meta.content!==want)meta.content=want;
+ fitBanner();
  const cur=VM.find(x=>x[0]===mode);
  vm.innerHTML='<span>'+cur[1]+'</span><span class="vl">'+cur[2]+'</span>';
  vm.title='Chế độ giao diện: '+cur[2]+' (bấm để đổi)';
@@ -116,9 +119,28 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-vm]');if(b
 (mq.addEventListener?mq.addEventListener('change',apply):mq.addListener(apply));
 apply();
 
+/* ---------- Tự chỉnh cỡ chữ banner ở chế độ điện thoại ---------- */
+function fitTo(el,max,min,ok){if(!el)return;let s=max;el.style.fontSize=s+'px';while(s>min&&!ok()){s-=.5;el.style.fontSize=s+'px'}}
+function fitBanner(){
+ const R=document.documentElement,h1=hd.querySelector('.ht h1'),sub=hd.querySelector('.sub'),link=hd.querySelector('.nbk'),stats=$('stats'),box=hd.querySelector('.nbkw');
+ [h1,sub,link,stats].forEach(e=>e&&(e.style.fontSize=''));
+ if(!R.classList.contains('m'))return;
+ const W=hd.clientWidth;
+ /* chữ chạy ngang hàng: to nhất có thể mà vẫn vừa một dòng */
+ fitTo(sub,Math.min(13.5,W/26),8,()=>sub.scrollWidth<=sub.clientWidth+1);
+ fitTo(link,Math.min(20,W/17),12,()=>link.getBoundingClientRect().width<=box.clientWidth-6);
+ fitTo(stats,Math.min(12.5,W/29),9,()=>stats.getBoundingClientRect().width<=box.clientWidth-2);
+ /* tiêu đề: tối đa 2 dòng và không tràn sang nút bên cạnh */
+ fitTo(h1,Math.min(21,W/17),12,()=>h1.scrollWidth<=h1.clientWidth+1&&h1.getBoundingClientRect().height<=parseFloat(getComputedStyle(h1).fontSize)*1.25*2+2)}
+let fq=0;const refit=()=>{cancelAnimationFrame(fq);fq=requestAnimationFrame(fitBanner)};
+addEventListener('resize',refit);addEventListener('orientationchange',()=>setTimeout(refit,250));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refit);
+if($('stats'))new MutationObserver(refit).observe($('stats'),{childList:true,characterData:true,subtree:true});
+if($('tm'))new MutationObserver(refit).observe($('tm'),{childList:true,characterData:true,subtree:true});
+
 /* sau mỗi lần vẽ lại: đưa mục đang chọn vào tầm nhìn (điện thoại) */
 const r0=render;
-render=function(){r0();
+render=function(){r0();fitBanner();
  if(document.documentElement.classList.contains('m'))
   document.querySelectorAll('.tabs .on,#ls .li.on,#gr .on').forEach(e=>e.scrollIntoView({inline:'center',block:'nearest'}))};
 })();
