@@ -1,6 +1,7 @@
 /* giaodien.js – giao diện học sinh / giáo viên, tạo đề kiểm tra, xuất Word, hỏi AI
    (nạp sau hocba.js và thithu.js) */
 const SECS=[['tt','📖','HỌC KIẾN THỨC','#2bb673'],['on','🧠','CỦNG CỐ – ÔN TẬP','#3b82c4'],['tn','🧪','THÍ NGHIỆM ẢO','#7c5cd6'],['vd','🌍','VẬN DỤNG','#e07b39'],['kt','📝','LÀM BÀI KIỂM TRA','#e5484d']];
+const SL=s=>s[0]==='kt'&&U.t?['🛠️','TẠO ĐỀ KIỂM TRA']:[s[1],s[2]];
 const SX={type:'mix',n:10,scope:'l'},TE={g:0,sel:[],tn:10,ds:2,tl:3,min:45,d:null};
 let PQ=[];
 const gdr=u=>{const m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/);return m?'https://drive.google.com/uc?export=view&id='+m[1]:u};
@@ -61,15 +62,17 @@ async function aiAsk(){
 
 /* ---------- Giáo viên: tạo đề, xuất Word ---------- */
 const mkSel=(id,on)=>{TE.sel=TE.sel.filter(x=>x!==id);if(on)TE.sel.push(id)};
-function mkOpen(){
- const Lg=D[G[TE.g]]||[],ch={};Lg.forEach(x=>{const c=x.c||'Chưa phân chương';(ch[c]=ch[c]||[]).push(x)});
- modal(`<h2 style="margin:0 0 8px">📝 TẠO ĐỀ KIỂM TRA</h2>
-<b>1. Nội dung</b> <select id="mg" style="width:auto;margin:0 0 8px 8px">${G.map((g,i)=>`<option value="${i}" ${i===TE.g?'selected':''}>${g}</option>`).join('')}</select>
+function mkSync(){if(TE.lu!==U.g){TE.g=U.g;TE.sel=[];TE.lu=U.g}}
+function mkHtml(){
+ mkSync();const Lg=D[G[TE.g]]||[],ch={};Lg.forEach(x=>{const c=x.c||'Chưa phân chương';(ch[c]=ch[c]||[]).push(x)});
+ return `<b>1. Nội dung</b> <select id="mg" style="width:auto;margin:0 0 8px 8px">${G.map((g,i)=>`<option value="${i}" ${i===TE.g?'selected':''}>${g}</option>`).join('')}</select>
 <p class="s">Bấm tên chương để mở danh sách bài, tích chọn các bài cần lấy câu hỏi.</p>
 ${Object.entries(ch).map(([c,ls])=>`<details class="card" style="padding:8px 12px;margin:6px 0"><summary><label><input type="checkbox" style="width:auto" data-m="ch" ${ls.every(x=>TE.sel.includes(x.id))?'checked':''}> <b>${esc(c)}</b></label></summary>${ls.map(x=>`<label class="it" style="justify-content:flex-start;gap:8px"><input type="checkbox" style="width:auto" data-m="ls" data-id="${x.id}" ${TE.sel.includes(x.id)?'checked':''}> <span>${esc(x.n)} <small class="s">(${cntS(x.ex)})</small></span></label>`).join('')}</details>`).join('')||'<p class="s">Lớp này chưa có bài.</p>'}
 <p><b>2. Thời gian</b> ${[15,45].map(m=>`<label style="margin:0 10px"><input type="radio" name="mt" value="${m}" style="width:auto" ${TE.min===m?'checked':''}> ${m} phút</label>`).join('')} hoặc <input id="mmin" type="number" min="1" value="${TE.min}" style="width:80px"> phút</p>
 <p><b>3. Số câu hỏi</b> TN <input id="mtn" type="number" min="0" value="${TE.tn}" style="width:70px"> Đúng/Sai <input id="mds" type="number" min="0" value="${TE.ds}" style="width:70px"> Trả lời ngắn <input id="mtl" type="number" min="0" value="${TE.tl}" style="width:70px"></p>
-<button class="btn w" data-n="mkgo">📄 Tạo đề</button>`)}
+<button class="btn w" data-n="mkgo">📄 Tạo đề</button>`}
+function mkOpen(){modal('<h2 style="margin:0 0 8px">📝 TẠO ĐỀ KIỂM TRA</h2>'+mkHtml())}
+const mkInline=()=>U.t&&U.s==='kt'&&$('md').style.display!=='flex';
 
 function docHtml(d){
  const by=y=>d.q.filter(q=>q.y===y),sec=(t,y,f)=>by(y).length?`<p><b>${t}</b></p>`+by(y).map(f).join(''):'';
@@ -110,7 +113,7 @@ document.addEventListener('click',async e=>{
   else{const v=exNz($('pt'+i).value),ok=v&&q.a.some(a=>exNz(a)===v);fb.textContent=ok?'✅ Chính xác!':'❌ Chưa đúng. Đáp án: '+q.a.join(' / ')}
   return}
  const b=e.target.closest('[data-n]');if(!b)return;const a=b.dataset.n;
- if(a==='mk'){if(!$('mg'))TE.g=U.g;mkOpen()}else if(a==='mkgo')mkGo();else if(a==='mkdoc')mkDoc();else if(a==='mkshare')exShareD(TE.d);
+ if(a==='mk'){if($('md').style.display==='flex')$('mx').click();if(cur().les){U.s='kt';save();render()}else mkOpen()}else if(a==='mkgo')mkGo();else if(a==='mkdoc')mkDoc();else if(a==='mkshare')exShareD(TE.d);
  else if(a==='hb')hbView();else if(a==='bk')$('bk').onclick();
  else if(a==='kty'){SX.type=b.dataset.v;render()}
  else if(a==='kgo'){const{L,les}=cur(),pool=ktPool(les,L),p=ktPlan(SX.n),q=['tn','ds','tl'].flatMap(y=>shuffle(pool.filter(x=>x.y===y)).slice(0,p[y]));
@@ -126,7 +129,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.id==='lex'){cur().les.ex=t.value;save();render()}
  else if(t.id==='lvd'){cur().les.vd=t.value;save();render()}
  else if(t.id==='aie')store.set('bio_ai',t.value.trim());
- else if(t.id==='mg'){TE.g=+t.value;TE.sel=[];mkOpen()}
+ else if(t.id==='mg'){TE.g=+t.value;TE.sel=[];mkInline()?render():mkOpen()}
  else if(t.dataset.m==='ch'){t.closest('details').querySelectorAll('[data-m=ls]').forEach(c=>{c.checked=t.checked;mkSel(c.dataset.id,t.checked)})}
  else if(t.dataset.m==='ls')mkSel(t.dataset.id,t.checked);
  else if(t.name==='mt'){TE.min=+t.value;$('mmin').value=t.value}
@@ -140,14 +143,14 @@ function render(){
  $('gr').innerHTML=G.map((g,i)=>`<button data-a="g" data-i="${i}" class="${i===U.g?'on':''}">${g}</button>`).join('');
  $('tbar').style.display=T?'flex':'none';
  $('tbar').innerHTML='<b>🔧 KHU VỰC GIÁO VIÊN</b><button class="btn w" data-n="mk" style="font-size:16px;padding:10px 20px">📝 TẠO ĐỀ KIỂM TRA</button><button class="btn g" data-n="hb">📈 Học bạ &amp; phân tích</button><button class="btn g" data-n="bk">💾 Sao lưu (data.json)</button>';
- $('tm').textContent=T?'🔓 Thoát chế độ giáo viên':'👩‍🏫 Giáo viên';$('bk').style.display=$('an').style.display='none';
+ $('tm').textContent=T?'🔓 Thoát GV':'👩‍🏫 Giáo viên';$('bk').style.display=$('an').style.display='none';
  $('ls').innerHTML='<div class="card"><h2>'+G[U.g]+' – Danh sách bài</h2>'+(L.length?L.map(x=>`<button class="li ${les&&x.id===les.id?'on':''}" data-a="l" data-id="${x.id}">${esc(x.n)}</button>`).join(''):'<p class="s">Chưa có bài nào.</p>')+(T?'<div class="row" style="margin-top:10px"><input id="nl" placeholder="Bài 1: …"><button class="btn" data-a="al">+ Thêm bài</button></div>':'')+'</div>';
  if(!les){$('mn').innerHTML='<div class="card">'+(T?'Hãy thêm bài học đầu tiên ở khung bên trái.':'Lớp này chưa có bài học.')+'</div>';return}
  const sec=SECS.find(s=>s[0]===U.s),ai=U.s!=='kt';
- const body=U.s==='on'?practice(les,T):U.s==='vd'?vdBody(les,T):U.s==='kt'?ktBody(les,L):media(les,U.s,T,U.s==='tt');
+ const body=U.s==='on'?practice(les,T):U.s==='vd'?vdBody(les,T):U.s==='kt'?(T?mkHtml():ktBody(les,L)):media(les,U.s,T,U.s==='tt');
  $('mn').innerHTML=`<div class="card hd">${T?`<input id="lt" value="${esc(les.n)}" style="font-size:20px;font-weight:700"><input id="lc" value="${esc(les.c||'')}" placeholder="Thuộc chương (vd: Chương 1 – Di truyền)" style="margin-top:8px"><button class="btn g sm" data-a="dl" style="margin-top:8px">🗑️ Xóa bài này</button>`:`<h2 style="font-size:22px">${esc(les.n)}</h2>`}</div>
-<div class="tabs">${SECS.map(([k,i,n,c])=>`<button style="--c:${c}" data-a="s" data-k="${k}" class="${k===U.s?'on':''}">${i} ${n}</button>`).join('')}${T?'<button style="--c:#b8860b" data-n="mk">🛠️ TẠO ĐỀ KIỂM TRA</button>':''}</div>
-<div class="mw ${ai?'':'one'}"><div class="card"><h2>${sec[1]} ${sec[2]}</h2>${body}</div>${ai?aiCard(les,T):''}</div>`;
+<div class="tabs">${SECS.map(s=>`<button style="--c:${s[3]}" data-a="s" data-k="${s[0]}" class="${s[0]===U.s?'on':''}">${SL(s).join(' ')}</button>`).join('')}</div>
+<div class="mw ${ai?'':'one'}"><div class="card"><h2>${SL(sec).join(' ')}</h2>${body}</div>${ai?aiCard(les,T):''}</div>`;
  document.querySelectorAll('img[data-bid]').forEach(async im=>{const bl=await dbop('readonly',o=>o.get(im.dataset.bid));if(bl)im.src=URL.createObjectURL(bl)})}
 
 $('tm').onclick=()=>{U.t=!U.t;if(U.t)store.set('bio_isT',true);save();render()};
