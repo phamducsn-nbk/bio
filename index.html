@@ -196,6 +196,8 @@ html.fm body{max-width:480px;margin:0 auto;box-shadow:0 0 40px #0004}
 
 html:not(.m) nav{flex-wrap:wrap}
 
+.dg{display:inline-block;font-style:normal;background:#052e2b;color:#fde047;border:1px solid #fde04788;border-radius:4px;padding:0 4px;margin:0 1px;font-weight:900;font-family:ui-monospace,Menlo,Consolas,monospace;min-width:1.05em;text-align:center}
+
 </style>
 </head>
 <body>
@@ -229,8 +231,8 @@ function defaultCur(){const cur={};for(const g in DEFAULT_TOC)cur[g]={chapters:D
 
 const ORIGINAL_HTML="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
 const GR=[["k6","KHTN 6","🌱","#16a34a"],["k7","KHTN 7","🦋","#0d9488"],["k8","KHTN 8","🔬","#0284c7"],["k9","KHTN 9","⚗️","#7c3aed"],["s10","SINH 10","🧫","#db2777"],["s11","SINH 11","🌿","#ea580c"],["s12","SINH 12","🧬","#ca8a04"]];
-const SECS=[["map","SƠ ĐỒ TƯ DUY","🧠"],["sheet","PHIẾU KHAI THÁC NỘI DUNG BÀI","📝"],["lab","THÍ NGHIỆM ẢO","🧪"],["review","ÔN TẬP - CỦNG CỐ","🎯"],["test","KIỂM TRA","⏱️"]];
-const MATSEC=["map","sheet","lab"];
+const SECS=[["map","SƠ ĐỒ TƯ DUY","🧠"],["review","ÔN TẬP - CỦNG CỐ","🎯"],["test","KIỂM TRA","⏱️"]];
+const SUGG=["THÍ NGHIỆM ẢO","PHIẾU KHAI THÁC NỘI DUNG BÀI","VIDEO BÀI GIẢNG","TÓM TẮT KIẾN THỨC","VẬN DỤNG THỰC TẾ"];
 const LV=["","Biết","Hiểu","Vận dụng"];
 const EXAMS={gk1:["Giữa học kì I",45],hk1:["Học kì I",60],gk2:["Giữa học kì II",45],hk2:["Học kì II",60],tx:["Kiểm tra thường xuyên",15]};
 const L="ABCDEF",AB="abcd",MB=1024*1024,TF_STEM="Xét tính đúng sai của các mệnh đề sau:";
@@ -266,17 +268,18 @@ let D={cur:{},questions:[],cfg:{aiUrl:"",hideAdmin:false}},materials=[];
 function cleanMats(list){return(list||[]).map(m=>({...m,id:String(m.id||newId()).replace(/[^\w-]/g,"")}))}
 function fixD(){D.cur=D.cur||{};GR.forEach(([g])=>{D.cur[g]=D.cur[g]||{chapters:[]};D.cur[g].chapters=D.cur[g].chapters||[]});D.questions=(D.questions||[]).filter(q=>q&&(q.type==="mc"||q.type==="tf"));D.cfg=Object.assign({aiUrl:"",hideAdmin:false},D.cfg||{})}
 const ready=(async()=>{
- let localAt=Number(localStorage.getItem("kh_savedAt")||0);
- if(EMB&&EMB.app==="khtn"&&EMB.savedAt>localAt){
+ /* chỉ dữ liệu do giáo viên tự chỉnh sửa (kh_edited) mới được ưu tiên hơn bản đã xuất bản; máy học sinh luôn lấy bản xuất bản */
+ let editedAt=Number(localStorage.getItem("kh_edited")||0);
+ if(EMB&&EMB.app==="khtn"&&EMB.savedAt>=editedAt){
   D={cur:EMB.cur,questions:EMB.questions,cfg:EMB.cfg};materials=cleanMats(EMB.materials);fixD();saveD(EMB.savedAt);
   try{await idbReplaceAll(materials)}catch(e){console.warn(e)}
  }else{
   D=store.get("kh_data",null)||{};fixD();
   try{materials=cleanMats(await idbAll())}catch(e){materials=[]}
-  if(GR.every(([g])=>!D.cur[g].chapters.length)){D.cur=defaultCur();saveD()}
+  if(GR.every(([g])=>!D.cur[g].chapters.length)){D.cur=defaultCur();saveD(1)}
  }
 })();
-function saveD(at){try{localStorage.setItem("kh_data",JSON.stringify(D));localStorage.setItem("kh_savedAt",String(at||Date.now()))}catch(e){toast("Bộ nhớ trình duyệt đầy – hãy tải bản sao lưu.","err")}}
+function saveD(at){try{localStorage.setItem("kh_data",JSON.stringify(D));localStorage.setItem("kh_savedAt",String(at||Date.now()));if(!at)localStorage.setItem("kh_edited",String(Date.now()))}catch(e){toast("Bộ nhớ trình duyệt đầy – hãy tải bản sao lưu.","err")}}
 const aiUrl=()=>D.cfg.aiUrl||AI_DEFAULT;
 
 /* ---------- mục lục ---------- */
@@ -316,12 +319,20 @@ function toggleRole(){if(!adminOK||!leaveTest())return;asStudent=!asStudent;if(a
 
 /* ---------- thống kê truy cập ---------- */
 async function cnt(path){const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);try{const r=await fetch("https://abacus.jasoncameron.dev/"+path,{signal:ac.signal});if(!r.ok)return null;const j=await r.json();return typeof j.value==="number"?j.value:null}catch(e){return null}finally{clearTimeout(t)}}
-async function stats(){const NS="nbk-khtn-sinh",b=Math.floor(Date.now()/300000);let ss=sessionStorage,sv,so;
- try{sv=ss.getItem("kh_v")?await cnt(`get/${NS}/visits`):await cnt(`hit/${NS}/visits`);ss.setItem("kh_v","1")}catch(e){sv=await cnt(`get/${NS}/visits`)}
- try{so=ss.getItem("kh_b")===String(b)?await cnt(`get/${NS}/on${b}`):await cnt(`hit/${NS}/on${b}`);ss.setItem("kh_b",String(b))}catch(e){so=await cnt(`hit/${NS}/on${b}`)}
- let pv=await cnt(`get/${NS}/on${b-1}`);
- $("sv").textContent=sv==null?"—":sv.toLocaleString("vi-VN");$("so").textContent=so==null?"—":Math.max(so,pv||0)}
-setTimeout(()=>{stats();setInterval(stats,300000)},300);
+const NS="nbk-khtn-sinh";
+function odo(n){let t=String(Math.max(0,n|0)).padStart(6,"0");return t.split("").map(c=>`<i class="dg">${c}</i>`).join("")}
+async function cntAlt(kind,key){/* máy đếm dự phòng khi dịch vụ chính không truy cập được */
+ const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
+ try{const r=await fetch(`https://api.counterapi.dev/v1/${NS}/${key}/${kind==="hit"?"up":""}`,{signal:ac.signal});if(!r.ok)return null;const j=await r.json();return typeof j.count==="number"?j.count:null}catch(e){return null}finally{clearTimeout(t)}}
+async function counter(kind,key){let v=await cnt(`${kind}/${NS}/${key}`);if(v==null)v=await cntAlt(kind,key);return v}
+let visitHit=false;
+async function stats(){const b=Math.floor(Date.now()/300000),ss=sessionStorage;
+ /* mỗi lần mở trang = 1 lượt (kể cả cùng thiết bị/IP); các lần làm mới sau đó chỉ đọc số */
+ let sv=await counter(visitHit?"get":"hit","visits");if(sv==null&&!visitHit)sv=await counter("hit","visits");if(sv!=null){visitHit=true;$("sv").innerHTML=odo(sv)}
+ let seen=false;try{seen=ss.getItem("kh_b")===String(b)}catch(e){}
+ let so=await counter(seen?"get":"hit","on"+b);try{ss.setItem("kh_b",String(b))}catch(e){}
+ let pv=await counter("get","on"+(b-1));if(so!=null)$("so").textContent=Math.max(so,pv||0)}
+document.addEventListener('DOMContentLoaded',()=>{});$('sv').innerHTML=odo(0);setTimeout(()=>{stats().then(()=>{if(!visitHit)setTimeout(stats,5000)});setInterval(stats,300000)},200);
 
 /* ---------- giao diện điện thoại / máy tính ---------- */
 const VM=[["auto","🔄","Tự động"],["m","📱","Điện thoại"],["d","🖥️","Máy tính"]];
@@ -367,7 +378,8 @@ function navHTML(){let h=`<button class="${V.name==="home"?"on":""}" onclick="go
 function render(){
  $("nav").innerHTML=navHTML();
  const ab=$("abar");
- if(adminOK){ab.classList.remove("hidden");ab.innerHTML=asStudent?`<b>👨‍🎓 Đang xem như HỌC SINH</b><span class="muted">(thử kết quả – bài làm được đánh dấu “Thử nghiệm”)</span><button class="btn sm warn" onclick="toggleRole()">↩ Về chế độ giáo viên</button><button class="btn sm sec" onclick="logoutAdmin()">Đăng xuất</button>`:`<b>🛠 Chế độ GIÁO VIÊN (quản trị)</b><button class="btn sm blue" onclick="toggleRole()">👨‍🎓 Xem như học sinh để thử kết quả</button><button class="btn sm sec" onclick="logoutAdmin()">Đăng xuất</button>`}else ab.classList.add("hidden");
+ const dirty=Number(localStorage.getItem("kh_edited")||0)>Number(localStorage.getItem("kh_pubAt")||0)&&(D.questions.length||materials.length);
+ if(adminOK){ab.classList.remove("hidden");ab.innerHTML=(dirty&&!asStudent?`<span style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:3px 8px;font-weight:700">⚠ Có thay đổi CHƯA xuất bản – học sinh chưa thấy. <a href="#" onclick="event.preventDefault();go({name:'adm',adm:'pub'})">Xuất bản ngay</a></span>`:"")+(asStudent?`<b>👨‍🎓 Đang xem như HỌC SINH</b><span class="muted">(thử kết quả – bài làm được đánh dấu “Thử nghiệm”)</span><button class="btn sm warn" onclick="toggleRole()">↩ Về chế độ giáo viên</button><button class="btn sm sec" onclick="logoutAdmin()">Đăng xuất</button>`:`<b>🛠 Chế độ GIÁO VIÊN (quản trị)</b><button class="btn sm blue" onclick="toggleRole()">👨‍🎓 Xem như học sinh để thử kết quả</button><button class="btn sm sec" onclick="logoutAdmin()">Đăng xuất</button>`)}else ab.classList.add("hidden");
  const hide=D.cfg.hideAdmin&&!/quantri/.test(location.hash);
  $("adminBtn").classList.toggle("hidden",V.name!=="home"||adminOK||hide);
  const m=$("main");
@@ -381,7 +393,7 @@ $("adminBtn").onclick=()=>askAdmin();
 function homeHTML(){
  const fl=["🌿","🦋","🐞","🌱","🐢","🍃","🦉","🌻","🐝"].map((e,i)=>`<span class="fl" style="left:${(i*11+3)%92}%;top:${[8,60,20,70,4,48,66,14,76][i]}%;font-size:${[40,34,30,44,28,36,32,38,30][i]}px">${e}</span>`).join("");
  const who=student?`<div style="margin-bottom:8px">👤 <b>${esc(student.name)}</b> · lớp ${esc(student.class)} <a href="#" onclick="event.preventDefault();stuForm()" style="margin-left:6px">Đổi</a> · <a href="#" onclick="event.preventDefault();myStats()">📈 Tiến độ của con</a></div>`:`<div style="margin-bottom:8px"><a href="#" onclick="event.preventDefault();stuForm()">👤 Nhập họ tên, lớp để lưu kết quả học tập</a></div>`;
- return `<div class="hero">${fl}<div style="position:relative"><h2>Chào con! Hôm nay con muốn học gì? 🌟</h2>${who}<p style="margin:0 0 14px">Chọn lớp, rồi chọn chương và bài ở menu bên trái. Mỗi bài có: <b>Sơ đồ tư duy</b>, <b>Phiếu khai thác nội dung bài</b>, <b>Thí nghiệm ảo</b>, <b>Ôn tập - củng cố</b> và <b>Kiểm tra</b>.</p>
+ return `<div class="hero">${fl}<div style="position:relative"><h2>Chào con! Hôm nay con muốn học gì? 🌟</h2>${who}<p style="margin:0 0 14px">Chọn lớp, rồi chọn chương và bài ở menu bên trái. Mỗi bài có: <b>Sơ đồ tư duy</b>, <b>Ôn tập - củng cố</b> và <b>Kiểm tra</b> (một số bài có thêm mục như <b>Thí nghiệm ảo</b>).</p>
  <div class="gcards">${GR.map(([g,n,ic,col])=>{let ls=lessonsOf(g),nq=ls.reduce((a,l)=>a+qCount(l.id),0);return `<button class="gc" style="background:${col}" onclick="go({name:'grade',g:'${g}',lesson:null})"><span>${ic}</span>${n}<small>${ls.length?`${ls.length} bài · ${nq} câu hỏi`:"Sắp có nội dung"}</small></button>`}).join("")}</div></div></div>
  <div class="card"><h2>Con sẽ học như thế nào?</h2><div class="gcards" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">${SECS.map(([k,n,ic],i)=>`<div style="border-radius:14px;padding:14px;background:${["#dcfce7","#fef9c3","#e0f2fe","#fce7f3","#ede9fe"][i]};font-weight:800;text-align:center"><div style="font-size:30px">${ic}</div>${n}</div>`).join("")}</div></div>`}
 
@@ -486,18 +498,21 @@ function gradeRender(){const g=V.g,l=V.lesson&&findLesson(V.lesson);if(V.lesson&
 function gradeWelcome(g,ls){const nq=ls.reduce((a,l)=>a+qCount(l.id),0);
  return `<div class="card"><h2>${GR.find(x=>x[0]===g)[2]} ${gName(g)}</h2><p>${ls.length?`Lớp này có <b>${chaptersOf(g).length}</b> chương, <b>${ls.length}</b> bài và <b>${nq}</b> câu hỏi luyện tập. <b>Hãy chọn một bài ở menu bên trái để bắt đầu.</b>`:`Nội dung ${gName(g)} đang được cập nhật. Con quay lại sau nhé!`}</p>${isTeacher()?`<button class="btn" onclick="admGrade='${g}';go({name:'adm',adm:'toc'})">📚 Nhập / sửa mục lục ${gName(g)}</button>`:""}</div>`}
 function lessonHTML(l){return `<div class="card"><div class="crumb">${gName(l.g)} › ${esc(l.ch.name)}</div><h2>Bài ${l.no}. ${esc(l.name)}</h2>
- <div class="tabs">${SECS.map(([k,n,ic])=>`<button class="${V.sec===k?"on":""}" onclick="setSec('${k}')">${ic} ${n}</button>`).join("")}</div><div id="sec"></div></div><div id="aiwrap"></div>`}
+ <div class="tabs">${lessonSecs(l).map(([k,n,ic])=>`<button class="${V.sec===k?"on":""}" onclick="setSec('${k}')">${ic} ${esc(n)}</button>`).join("")}${isTeacher()?`<button style="border-style:dashed;border-color:#d97706;color:#b45309" onclick="secAddForm()">➕ Thêm mục</button>`:""}</div><div id="sec"></div></div><div id="aiwrap"></div>`}
+function lessonSecs(l){const o=origLesson(l.id)||l;return[SECS[0],...(o.secs||[]).map(x=>[x.id,x.name,"📌"]),SECS[1],SECS[2]]}
+function origLesson(id){for(const[g]of GR)for(const c of chaptersOf(g))for(const l of c.lessons)if(l.id===id)return l;return null}
 function setSec(k){if(!leaveTest())return;V.sec=k;gradeRender()}
 function secRender(){const l=findLesson(V.lesson),el=$("sec");
- if(MATSEC.includes(V.sec))el.innerHTML=matSection(l,V.sec);
- else if(V.sec==="review")prHome(l);
- else testHome(l);
+ if(!lessonSecs(l).some(x=>x[0]===V.sec))V.sec="map";
+ if(V.sec==="review")prHome(l);
+ else if(V.sec==="test")testHome(l);
+ else el.innerHTML=matSection(l,V.sec);
  if(V.sec!=="test")$("aiwrap").innerHTML=aiCard(l)}
 
 /* ---------- tài liệu ---------- */
 const SEC_HELP={map:"Tải sơ đồ tư duy (ảnh, PDF…) hoặc dán link vào đây.",sheet:"Phiếu khai thác nội dung bài: tệp Word/PDF, ảnh hoặc link.",lab:"Dán link Google Site / PhET / video thí nghiệm ảo. Học sinh bấm để mở hoặc xem ngay trong trang."};
-function matSection(l,sec){const list=matsOf(l.id,sec),name=SECS.find(s=>s[0]===sec)[1];
- let tools=isTeacher()?`<div class="tool"><b style="width:100%">🛠 Giáo viên: thêm nội dung cho “${name}” – Bài ${l.no}</b><button class="btn sm" onclick="$('fileIn').click()">📎 Tải tệp lên</button><button class="btn sm blue" onclick="matForm('link')">🔗 Thêm link</button><button class="btn sm warn" onclick="matForm('note')">📝 Thêm ghi chú</button><span class="muted" style="font-size:13px;align-self:center">${SEC_HELP[sec]}</span><input type="file" id="fileIn" multiple class="hidden" onchange="addFiles(this.files);this.value=''"></div>`:"";
+function matSection(l,sec){const list=matsOf(l.id,sec),name=lessonSecs(l).find(s=>s[0]===sec)[1],custom=sec!=="map";
+ let tools=isTeacher()?`<div class="tool"><b style="width:100%">🛠 Giáo viên: thêm nội dung cho “${name}” – Bài ${l.no}</b><button class="btn sm" onclick="$('fileIn').click()">📎 Tải tệp lên</button><button class="btn sm blue" onclick="matForm('link')">🔗 Thêm link</button><button class="btn sm warn" onclick="matForm('note')">📝 Thêm ghi chú</button><span class="muted" style="font-size:13px;align-self:center">${SEC_HELP[sec]||"Tải tệp, dán link (Google Site, PhET, YouTube…) hoặc ghi chú vào đây."}</span>${custom?`<span style="margin-left:auto" class="row"><button class="btn sm sec" onclick="secRename('${sec}')">✏ Đổi tên mục</button><button class="btn sm red" onclick="secDel('${sec}')">🗑 Xóa mục</button></span>`:""}<input type="file" id="fileIn" multiple class="hidden" onchange="addFiles(this.files);this.value=''"></div>`:"";
  return tools+(list.length?list.map(m=>mview(m)).join(""):`<div class="empty">${isTeacher()?"Chưa có nội dung. Hãy thêm tệp hoặc link ở trên.":"Nội dung phần này đang được cập nhật. Con quay lại sau nhé!"}</div>`)}
 const EXT_KIND={png:"image",jpg:"image",jpeg:"image",gif:"image",webp:"image",svg:"image",pdf:"pdf",mp4:"video",webm:"video",mov:"video",ogv:"video",mp3:"audio",wav:"audio",m4a:"audio",oga:"audio",doc:"word",docx:"word",ppt:"ppt",pptx:"ppt",xls:"excel",xlsx:"excel"};
 const KICON={image:"🖼️",pdf:"📕",video:"🎬",audio:"🎧",word:"📘",ppt:"📙",excel:"📗",other:"📄",note:"📝",link:"🔗",yt:"▶️"};
@@ -624,6 +639,18 @@ async function aiAsk(){const inp=$("aiq"),q=inp.value.trim();if(!q||aiBusy)retur
 
 function myExport(){const w=who();if(!w)return;download(new Blob([JSON.stringify({app:"khtn-scores",scores:store.get("kh_scores",[]).filter(x=>x.n===w.n&&x.c===w.c)})],{type:"application/json"}),"ket-qua-"+w.n.replace(/\s+/g,"-")+".json")}
 
+/* ---------- mục bổ sung do giáo viên thêm ---------- */
+function secAddForm(){const l=findLesson(V.lesson);
+ modal(`<h3>➕ Thêm mục cho bài</h3><p class="muted" style="margin:0 0 8px">Ví dụ: Thí nghiệm ảo, Phiếu khai thác nội dung bài… Mục mới nằm giữa “Sơ đồ tư duy” và “Ôn tập”.</p><div class="fg"><label>Tên mục</label><input type="text" id="sn2" style="width:100%" maxlength="60" placeholder="THÍ NGHIỆM ẢO"></div><div class="row" style="margin-bottom:10px">${SUGG.map(t=>`<button class="btn sm sec" onclick="$('sn2').value='${t}'">${t}</button>`).join("")}</div>
+ <div class="fg"><label>Áp dụng cho</label><select id="sscope"><option value="lesson">Chỉ Bài ${l.no}</option><option value="chapter">Tất cả bài trong chương này</option><option value="grade">Tất cả bài của ${gName(l.g)}</option></select></div><div class="row"><button class="btn" onclick="secAdd()">Thêm mục</button><button class="btn sec" onclick="closeModal()">Hủy</button></div>`);setTimeout(()=>$("sn2")?.focus(),50)}
+function secAdd(){const nm=$("sn2").value.trim().toUpperCase();if(!nm)return toast("Hãy nhập tên mục","err");const l=findLesson(V.lesson),sc=$("sscope").value;
+ const targets=sc==="lesson"?[l.id]:sc==="chapter"?l.ch.lessons.map(x=>x.id):lessonsOf(l.g).map(x=>x.id);let first=null;
+ targets.forEach(id=>{const o=origLesson(id);o.secs=o.secs||[];if(o.secs.some(x=>norm(x.name)===norm(nm))){if(id===l.id)first=o.secs.find(x=>norm(x.name)===norm(nm)).id;return}const s={id:"x"+newId(),name:nm};o.secs.push(s);if(id===l.id)first=s.id});
+ saveD();closeModal();V.sec=first;gradeRender();toast("✅ Đã thêm mục “"+nm+"”")}
+function secRename(id){const o=origLesson(V.lesson),s=o.secs.find(x=>x.id===id),n=prompt("Tên mục mới:",s.name);if(n&&n.trim()){s.name=n.trim().toUpperCase();saveD();gradeRender()}}
+async function secDel(id){const o=origLesson(V.lesson),s=o.secs.find(x=>x.id===id),ms=matsOf(o.id,id);if(!confirm(`Xóa mục “${s.name}”${ms.length?` cùng ${ms.length} tài liệu trong mục`:""}?`))return;
+ for(const m of ms)await idbDel(m.id);materials=materials.filter(m=>!(m.lesson===o.id&&m.section===id));o.secs=o.secs.filter(x=>x.id!==id);saveD();V.sec="map";gradeRender()}
+
 /* ====== QUẢN TRỊ: mục lục, ngân hàng câu hỏi, kết quả, xuất bản ====== */
 let admGrade="k6";
 function admRender(){const a=V.adm;if(a==="toc")tocRender();else if(a==="bank")bankRender();else if(a==="exam")examRender();else if(a==="results")resRender();else pubRender()}
@@ -659,7 +686,7 @@ function tocRead(){tocPrev=parseTOC($("tocTxt").value,admGrade);$("tocPrev").inn
 function tocApply(){const g=admGrade,old=D.cur[g].chapters;let msg=`Áp dụng mục lục mới cho ${gName(g)}?`;
  if(tocMode==="replace"){const keep=new Set(tocPrev.flatMap(c=>c.lessons.map(l=>l.id))),lost=old.flatMap(c=>c.lessons).filter(l=>!keep.has(l.id));const nq=lost.reduce((a,l)=>a+qCount(l.id),0);if(lost.length)msg+=`\n\n${lost.length} bài cũ không còn trong mục lục mới${nq?` (kèm ${nq} câu hỏi sẽ bị xóa)`:""}.`}
  if(!confirm(msg))return;
- if(tocMode==="replace"){const keep=new Set(tocPrev.flatMap(c=>c.lessons.map(l=>l.id)));D.questions=D.questions.filter(q=>keep.has(q.lesson)||!old.flatMap(c=>c.lessons).some(l=>l.id===q.lesson));materials=materials.filter(m=>{const dead=old.flatMap(c=>c.lessons).some(l=>l.id===m.lesson)&&!keep.has(m.lesson);if(dead)idbDel(m.id);return!dead});D.cur[g].chapters=tocPrev}
+ if(tocMode==="replace"){const keep=new Set(tocPrev.flatMap(c=>c.lessons.map(l=>l.id)));D.questions=D.questions.filter(q=>keep.has(q.lesson)||!old.flatMap(c=>c.lessons).some(l=>l.id===q.lesson));materials=materials.filter(m=>{const dead=old.flatMap(c=>c.lessons).some(l=>l.id===m.lesson)&&!keep.has(m.lesson);if(dead)idbDel(m.id);return!dead});tocPrev.forEach(c=>c.lessons.forEach(l=>{const o=old.flatMap(x=>x.lessons).find(z=>z.id===l.id);if(o&&o.secs)l.secs=o.secs}));D.cur[g].chapters=tocPrev}
  else{const have=new Set(lessonsOf(g).map(l=>l.no));let mx=Math.max(0,...have);tocPrev.forEach(c=>c.lessons.forEach(l=>{if(have.has(l.no))l.no=++mx;have.add(l.no)}));D.cur[g].chapters=[...old,...tocPrev]}
  saveD();tocPrev=null;toast("✅ Đã cập nhật mục lục");tocRender()}
 function findCh(id){return chaptersOf(admGrade).find(c=>c.id===id)}
@@ -839,7 +866,7 @@ function pubRender(){const sz=totalSize(),bad=D.questions.map(q=>({q,e:validateQ
 function saveAiUrl(){D.cfg.aiUrl=$("aiu").value.trim();saveD();toast("✅ Đã lưu link máy chủ AI")}
 function exportHTML(){D.cfg.hideAdmin=$("hideAdm").checked;D.cfg.aiUrl=($("aiu")?.value||D.cfg.aiUrl||"").trim();saveD();const bad=D.questions.filter(q=>validateQ(q).length).length;if(bad&&!confirm(`Còn ${bad} câu hỏi có lỗi. Vẫn tải về?`))return;
  const json=JSON.stringify(bundle()).replace(/</g,"\\u003c"),html=ORIGINAL_HTML.replace(/(<script id="vec-data" type="application\/json">)[\s\S]*?(<\/script>)/,(m,a,b)=>a+json+b);
- download(new Blob([html],{type:"text/html;charset=utf-8"}),"index.html");toast("✅ Đã tạo index.html. Hãy tải tệp này lên GitHub để thay tệp cũ.")}
+ download(new Blob([html],{type:"text/html;charset=utf-8"}),"index.html");localStorage.setItem("kh_pubAt",String(Date.now()));render();toast("✅ Đã tạo index.html. Hãy tải tệp này lên GitHub để thay tệp cũ.")}
 function exportData(){download(new Blob([JSON.stringify(bundle(),null,1)],{type:"application/json"}),"sao-luu-khtn-"+new Date().toISOString().slice(0,10)+".json");toast("✅ Đã tải tệp sao lưu")}
 $("restoreIn").onchange=function(){importData(this.files[0]);this.value=""};
 function importData(file){if(!file)return;const r=new FileReader();r.onload=async()=>{try{const d=JSON.parse(r.result);if(!d||d.app!=="khtn"||!d.cur)return toast("Tệp không đúng định dạng của trang này","err");
