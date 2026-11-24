@@ -198,6 +198,14 @@ html:not(.m) nav{flex-wrap:wrap}
 
 .dg{display:inline-block;font-style:normal;background:#052e2b;color:#fde047;border:1px solid #fde04788;border-radius:4px;padding:0 4px;margin:0 1px;font-weight:900;font-family:ui-monospace,Menlo,Consolas,monospace;min-width:1.05em;text-align:center}
 
+canvas.zi{display:block;max-width:100%;border-radius:8px;cursor:zoom-in;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#zoomov{position:fixed;inset:0;z-index:300;background:#111;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#zoomov canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.zbar{position:absolute;right:12px;top:calc(12px + env(safe-area-inset-top,0px));display:flex;gap:8px}
+.zbar button{width:48px;height:48px;border-radius:50%;border:0;background:#ffffffd9;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px #0008}
+.zhint{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));text-align:center;color:#fff;font-size:13px;opacity:.75;pointer-events:none;padding:0 12px}
+@media print{body:not(.printing) canvas.zi,body:not(.printing) #zoomov{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -255,7 +263,7 @@ function ytId(u){let m=String(u||"").match(/(?:youtu\.be\/|youtube\.com\/(?:watc
 function driveId(u){let m=String(u||"").match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]{10,})/);return m?m[1]:null}
 let tt;function toast(msg,type){let t=$("toast");t.textContent=msg;t.className=type==="err"?"err":"";clearTimeout(tt);tt=setTimeout(()=>t.classList.add("hidden"),type==="err"?6000:3800)}
 function modal(html,wide){$("modal").innerHTML=`<div class="mdl" onmousedown="if(event.target===this)closeModal()"><div class="mb ${wide?"wide":""}">${html}</div></div>`}
-function closeModal(){$("modal").innerHTML="";adminNext=null}
+function closeModal(){const was=!!$("qmodalHost");if(was){editId=null;draft=null}$("modal").innerHTML="";adminNext=null;if(was&&V.name==="adm"&&V.adm==="bank")bankPanel()}
 
 /* ---------- kho dữ liệu ---------- */
 let dbp=null;
@@ -507,7 +515,7 @@ function secRender(){const l=findLesson(V.lesson),el=$("sec");
  if(V.sec==="review")prHome(l);
  else if(V.sec==="test")testHome(l);
  else el.innerHTML=matSection(l,V.sec);
- if(V.sec!=="test")$("aiwrap").innerHTML=aiCard(l)}
+ if(V.sec!=="test")$("aiwrap").innerHTML=aiCard(l);initInline()}
 
 /* ---------- tài liệu ---------- */
 const SEC_HELP={map:"Tải sơ đồ tư duy (ảnh, PDF…) hoặc dán link vào đây.",sheet:"Phiếu khai thác nội dung bài: tệp Word/PDF, ảnh hoặc link.",lab:"Dán link Google Site / PhET / video thí nghiệm ảo. Học sinh bấm để mở hoặc xem ngay trong trang."};
@@ -526,8 +534,8 @@ function mview(m){let body="",ic;
   else if(d)body=`<iframe class="ifr" src="https://drive.google.com/file/d/${d}/preview" allowfullscreen loading="lazy"></iframe>`;
   else body=`<div class="row"><a class="btn" href="${esc(m.url)}" target="_blank" rel="noopener">🔗 Mở liên kết</a><button class="btn sec sm" onclick="embedLink(this,'${m.id}')">👁 Xem ngay trong trang</button></div><div class="emb"></div>`}
  else{const k=fkind(m);ic=KICON[k];const u=m.data?blobUrl(m):"";
-  if(k==="image")body=`<img src="${u}" alt="${esc(m.name)}">`;else if(k==="pdf")body=`<iframe class="pdf" src="${u}"></iframe>`;else if(k==="video")body=`<video controls src="${u}" style="max-height:70vh"></video>`;else if(k==="audio")body=`<audio controls src="${u}" style="width:100%"></audio>`;
-  body+=`<div class="row" style="margin-top:8px"><a class="btn sm sec" href="${u}" download="${esc(m.name)}">⬇ Tải về (${fmtSize(m.size)})</a>${k==="word"||k==="ppt"||k==="excel"?`<span class="muted" style="font-size:13px">Tệp Office: tải về và mở bằng Word/PowerPoint/Excel.</span>`:""}</div>`}
+  if(k==="image")body=isTeacher()?`<img src="${u}" alt="${esc(m.name)}">`:`<canvas class="zi" data-id="${m.id}"></canvas><div class="row" style="margin-top:8px"><button class="btn" onclick="openZoom('${m.id}')">🔍 Phóng to / thu nhỏ</button><span class="muted" style="font-size:13px">Bấm vào ảnh để xem toàn màn hình</span></div>`;else if(k==="pdf")body=`<iframe class="pdf" src="${u}${isTeacher()?"":"#toolbar=0&navpanes=0"}"></iframe>`;else if(k==="video")body=`<video controls src="${u}" style="max-height:70vh"></video>`;else if(k==="audio")body=`<audio controls src="${u}" style="width:100%"></audio>`;
+  if(isTeacher()||k!=="image")body+=`<div class="row" style="margin-top:8px"><a class="btn sm sec" href="${u}" download="${esc(m.name)}">⬇ Tải về (${fmtSize(m.size)})</a>${k==="word"||k==="ppt"||k==="excel"?`<span class="muted" style="font-size:13px">Tệp Office: tải về và mở bằng Word/PowerPoint/Excel.</span>`:""}</div>`}
  const adm=isTeacher()?`<span style="margin-left:auto" class="row"><button class="btn sm sec" onclick="moveMat('${m.id}',-1)" title="Lên">▲</button><button class="btn sm sec" onclick="moveMat('${m.id}',1)" title="Xuống">▼</button>${m.kind!=="file"?`<button class="btn sm sec" onclick="matForm('${m.kind}','${m.id}')">✏ Sửa</button>`:`<button class="btn sm sec" onclick="renameMat('${m.id}')">✏ Đổi tên</button>`}<button class="btn sm red" onclick="delMat('${m.id}')">🗑</button></span>`:"";
  return `<div class="mat"><h4>${ic} ${esc(m.name)}${adm}</h4>${body}</div>`}
 function embedLink(btn,id){const m=materials.find(x=>x.id===id),box=btn.closest(".mat").querySelector(".emb");if(box.innerHTML){box.innerHTML="";btn.textContent="👁 Xem ngay trong trang";return}box.innerHTML=`<iframe class="pdf" style="margin-top:8px;background:#fff" src="${esc(m.url)}" loading="lazy"></iframe><p class="muted" style="font-size:13px">Nếu khung trống, trang web đó không cho nhúng – con bấm “Mở liên kết” nhé.</p>`;btn.textContent="✖ Đóng khung xem"}
@@ -651,6 +659,36 @@ function secRename(id){const o=origLesson(V.lesson),s=o.secs.find(x=>x.id===id),
 async function secDel(id){const o=origLesson(V.lesson),s=o.secs.find(x=>x.id===id),ms=matsOf(o.id,id);if(!confirm(`Xóa mục “${s.name}”${ms.length?` cùng ${ms.length} tài liệu trong mục`:""}?`))return;
  for(const m of ms)await idbDel(m.id);materials=materials.filter(m=>!(m.lesson===o.id&&m.section===id));o.secs=o.secs.filter(x=>x.id!==id);saveD();V.sec="map";gradeRender()}
 
+/* ---------- xem ảnh sơ đồ: phóng to/thu nhỏ, hạn chế tải về ---------- */
+function wmark(c,W,H,d){const t=(student?student.name+" · "+student.class+" · ":"")+"nbk.edu.vn";c.save();c.font=`700 ${Math.max(13,Math.round(W/38))}px sans-serif`;c.fillStyle="rgba(110,110,110,.17)";c.textAlign="center";c.rotate(-0.42);
+ const step=Math.max(150,W/4.2),stepY=Math.max(120,H/5);for(let y=-H;y<H*1.6;y+=stepY)for(let x=-W;x<W*1.8;x+=step*1.9)c.fillText(t,x+((Math.round(y/stepY)%2)?step:0),y);c.restore()}
+function initInline(){document.querySelectorAll("canvas.zi").forEach(cv=>{const m=materials.find(x=>x.id===cv.dataset.id);if(!m)return;const img=new Image();img.onload=()=>{cv._img=img;drawInline(cv)};img.src=blobUrl(m);cv.onclick=()=>openZoom(m.id);cv.oncontextmenu=e=>{e.preventDefault();return false}})}
+function drawInline(cv){const img=cv._img;if(!img||!cv.isConnected)return;const W=cv.parentElement.clientWidth||600,h=Math.round(W*img.height/img.width),d=Math.min(devicePixelRatio||1,2);cv.width=Math.round(W*d);cv.height=Math.round(h*d);cv.style.width=W+"px";cv.style.height=h+"px";const c=cv.getContext("2d");c.drawImage(img,0,0,cv.width,cv.height);wmark(c,cv.width,cv.height,d)}
+addEventListener("resize",()=>document.querySelectorAll("canvas.zi").forEach(drawInline));
+let ZS=null;
+function closeZoom(){const d=$("zoomov");if(d)d.remove();document.body.style.overflow="";removeEventListener("keydown",zKey);ZS=null}
+function zKey(e){if(e.key==="Escape")closeZoom();else if(e.key==="+"||e.key==="=")ZS&&ZS.zoom(1.3);else if(e.key==="-")ZS&&ZS.zoom(1/1.3)}
+function openZoom(id){const m=materials.find(x=>x.id===id);if(!m||$("zoomov"))return;
+ const d=document.createElement("div");d.id="zoomov";d.oncontextmenu=e=>{e.preventDefault();return false};
+ d.innerHTML=`<canvas></canvas><div class="zbar"><button data-z="in" title="Phóng to">＋</button><button data-z="out" title="Thu nhỏ">－</button><button data-z="fit" title="Vừa màn hình">⟲</button><button data-z="x" title="Đóng">✖</button></div><div class="zhint">Chụm hai ngón để phóng to / thu nhỏ · kéo để di chuyển · bấm đúp để phóng to</div>`;
+ document.body.append(d);document.body.style.overflow="hidden";addEventListener("keydown",zKey);
+ const cv=d.querySelector("canvas"),ctx=cv.getContext("2d"),img=new Image(),S={s:1,x:0,y:0},DP=Math.min(devicePixelRatio||1,2);let W=0,H=0,fit=1;
+ function size(){W=innerWidth;H=innerHeight;cv.width=W*DP;cv.height=H*DP;fit=img.width?Math.min(W/img.width,H/img.height):1;draw()}
+ function draw(){ctx.setTransform(DP,0,0,DP,0,0);ctx.fillStyle="#111";ctx.fillRect(0,0,W,H);if(!img.width)return;ctx.save();ctx.translate(W/2+S.x,H/2+S.y);const k=fit*S.s;ctx.scale(k,k);ctx.drawImage(img,-img.width/2,-img.height/2);ctx.restore();wmark(ctx,W,H,1)}
+ function zoomAt(f,px,py){const ns=Math.max(.5,Math.min(10,S.s*f)),r=ns/S.s;S.x=(px-W/2)-((px-W/2)-S.x)*r;S.y=(py-H/2)-((py-H/2)-S.y)*r;S.s=ns;draw()}
+ S.zoom=f=>zoomAt(f,W/2,H/2);S.reset=()=>{S.s=1;S.x=S.y=0;draw()};ZS=S;
+ d.querySelector(".zbar").onclick=e=>{const z=e.target.dataset.z;if(z==="in")S.zoom(1.4);else if(z==="out")S.zoom(1/1.4);else if(z==="fit")S.reset();else if(z==="x")closeZoom()};
+ const P=new Map();let lastTap=0,moved=0,start=null;
+ cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;start={x:e.clientX,y:e.clientY}});
+ cv.addEventListener("pointermove",e=>{const p=P.get(e.pointerId);if(!p)return;
+  if(P.size===1){S.x+=e.clientX-p.x;S.y+=e.clientY-p.y;moved+=Math.abs(e.clientX-p.x)+Math.abs(e.clientY-p.y);p.x=e.clientX;p.y=e.clientY;draw()}
+  else if(P.size===2){const o=[...P.entries()].find(([id])=>id!==e.pointerId)[1],d0=Math.hypot(p.x-o.x,p.y-o.y);p.x=e.clientX;p.y=e.clientY;const d1=Math.hypot(p.x-o.x,p.y-o.y);moved+=99;if(d0>0)zoomAt(d1/d0,(p.x+o.x)/2,(p.y+o.y)/2)}});
+ const up=e=>{if(!P.has(e.pointerId))return;P.delete(e.pointerId);if(moved<10&&P.size===0){const t=Date.now();if(t-lastTap<320){S.s>1.2?S.reset():zoomAt(3,e.clientX,e.clientY);lastTap=0}else lastTap=t}};
+ cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+ cv.addEventListener("wheel",e=>{e.preventDefault();zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX,e.clientY)},{passive:false});
+ addEventListener("resize",size);
+ img.onload=size;img.src=blobUrl(m)}
+
 /* ====== QUẢN TRỊ: mục lục, ngân hàng câu hỏi, kết quả, xuất bản ====== */
 let admGrade="k6";
 function admRender(){const a=V.adm;if(a==="toc")tocRender();else if(a==="bank")bankRender();else if(a==="exam")examRender();else if(a==="results")resRender();else pubRender()}
@@ -711,32 +749,59 @@ function bankRender(){const g=B.g,ls=lessonsOf(g);if(!B.l||!ls.find(x=>x.id===B.
  ${B.l?`<div class="card" id="bkPanel"></div>`:""}`;if(B.l)bankPanel()}
 function bankPanel(){const l=findLesson(B.l),c=cnt2(l.id);
  $("bkPanel").innerHTML=`<h3>Bài ${l.no}. ${esc(l.name)}</h3><div class="row" style="margin-bottom:8px"><div style="flex:1;min-width:200px">Trắc nghiệm ${c.mc}/${TARGET_MC}<div class="prog"><i style="width:${Math.min(100,c.mc/TARGET_MC*100)}%"></i></div></div><div style="flex:1;min-width:200px">Đúng/Sai ${c.tf}/${TARGET_TF}<div class="prog"><i style="width:${Math.min(100,c.tf/TARGET_TF*100)}%"></i></div></div></div>
- <div class="row" style="margin-bottom:12px"><span class="seg">${[["manual","✍ Soạn từng câu"],["import","📄 Nhập từ Word / Excel"]].map(([k,t])=>`<button class="${B.mode===k?"on":""}" onclick="B.mode='${k}';bankPanel()">${t}</button>`).join("")}</span><button class="btn sec sm" onclick="exportBank()">⬇ Xuất ngân hàng ${gName(B.g)} ra Excel</button></div>
- <div id="bkForm"></div><h3 style="margin-top:16px">Danh sách câu hỏi của bài (${c.mc+c.tf})</h3><div class="row" style="margin-bottom:8px"><span class="seg">${[["all","Tất cả"],["mc","Trắc nghiệm"],["tf","Đúng/Sai"]].map(([k,t])=>`<button class="${B.flt===k?"on":""}" onclick="B.flt='${k}';bkList()">${t}</button>`).join("")}</span></div><div id="bkList"></div>`;
- B.mode==="manual"?qForm():impUI();bkList()}
+ <div class="row" style="margin-bottom:12px"><span class="seg">${[["manual","✍ Soạn từng câu"],["import","📄 Nhập từ Word / Excel"],["review","🔎 Rà soát & sửa câu hỏi"]].map(([k,t])=>`<button class="${B.mode===k?"on":""}" onclick="B.mode='${k}';bankPanel()">${t}</button>`).join("")}</span><button class="btn sec sm" onclick="exportBank()">⬇ Xuất ngân hàng ${gName(B.g)} ra Excel</button></div>
+ ${B.mode==="review"?revBody():`<div id="bkForm"></div><h3 style="margin-top:16px">Danh sách câu hỏi của bài (${c.mc+c.tf})</h3><div class="row" style="margin-bottom:8px"><span class="seg">${[["all","Tất cả"],["mc","Trắc nghiệm"],["tf","Đúng/Sai"]].map(([k,t])=>`<button class="${B.flt===k?"on":""}" onclick="B.flt='${k}';bkList()">${t}</button>`).join("")}</span></div><div id="bkList"></div>`}`;
+ if(B.mode==="manual")qForm();else if(B.mode==="import")impUI();if(B.mode!=="review")bkList()}
 function blankDraft(t,lv){return{type:t||"mc",level:lv||1,question:"",options:["","","",""],answer:0,items:[0,1,2,3].map(()=>({text:"",answer:true})),h1:"",h2:"",explanation:""}}
 function qForm(){if(!draft)draft=blankDraft();const d=draft;
- $("bkForm").innerHTML=`<div style="border:2px solid var(--bd);border-radius:14px;padding:12px;background:#fcfffc"><div class="row" style="margin-bottom:8px"><b>${editId?"✏ Sửa câu hỏi":"➕ Câu hỏi mới"}</b><span class="seg">${[["mc","Trắc nghiệm"],["tf","Đúng/Sai"]].map(([k,t])=>`<button class="${d.type===k?"on":""}" onclick="syncDraft();draft.type='${k}';qForm()">${t}</button>`).join("")}</span><span class="seg">${[1,2,3].map(v=>`<button class="${d.level===v?"on":""}" onclick="syncDraft();draft.level=${v};qForm()">${LV[v]}</button>`).join("")}</span></div>
+ const host=$("qmodalHost")||$("bkForm"),q0=editId&&D.questions.find(x=>x.id===editId),g0=q0&&findLesson(q0.lesson)?findLesson(q0.lesson).g:B.g;
+ host.innerHTML=`<div style="${$("qmodalHost")?"":"border:2px solid var(--bd);border-radius:14px;padding:12px;background:#fcfffc"}"><div class="row" style="margin-bottom:8px"><b>${editId?"✏ Sửa câu hỏi":"➕ Câu hỏi mới"}</b><span class="seg">${[["mc","Trắc nghiệm"],["tf","Đúng/Sai"]].map(([k,t])=>`<button class="${d.type===k?"on":""}" onclick="syncDraft();draft.type='${k}';qForm()">${t}</button>`).join("")}</span><span class="seg">${[1,2,3].map(v=>`<button class="${d.level===v?"on":""}" onclick="syncDraft();draft.level=${v};qForm()">${LV[v]}</button>`).join("")}</span></div>
+ ${q0?`<div class="fg"><label>Thuộc bài</label><select id="dles" style="width:100%">${chaptersOf(g0).map(c=>`<optgroup label="${esc(c.name)}">${c.lessons.map(l=>`<option value="${l.id}" ${l.id===(d.lesson||q0.lesson)?"selected":""}>Bài ${l.no}. ${esc(l.name)}</option>`).join("")}</optgroup>`).join("")}</select></div>`:""}
  <div class="fg"><label>${d.type==="tf"?"Phần dẫn (nội dung chung)":"Nội dung câu hỏi"}</label><textarea id="dq">${esc(d.question)}</textarea></div>
  ${d.type==="mc"?`<div class="fg"><label>Các phương án (chọn tròn ở phương án đúng)</label>${d.options.map((o,i)=>`<div class="row" style="margin-bottom:5px"><input type="radio" name="dans" value="${i}" ${d.answer===i?"checked":""}><b>${L[i]}.</b><input type="text" class="dopt" style="flex:1" value="${esc(o)}">${d.options.length>2?`<button class="btn sm red" onclick="syncDraft();rmOpt(${i})">✖</button>`:""}</div>`).join("")}${d.options.length<6?`<button class="btn sm sec" onclick="syncDraft();draft.options.push('');qForm()">➕ Thêm phương án</button>`:""}</div>`
  :`<div class="fg"><label>Bốn mệnh đề a, b, c, d và đáp án</label>${d.items.map((it,i)=>`<div class="row" style="margin-bottom:5px"><b>${AB[i]})</b><input type="text" class="dit" style="flex:1" value="${esc(it.text)}"><select class="dia"><option value="1" ${it.answer?"selected":""}>Đúng</option><option value="0" ${it.answer?"":"selected"}>Sai</option></select></div>`).join("")}</div>`}
  <div class="row"><div class="fg" style="flex:1;min-width:200px"><label>Gợi ý 1 (không bắt buộc)</label><input type="text" id="dh1" style="width:100%" value="${esc(d.h1)}"></div><div class="fg" style="flex:1;min-width:200px"><label>Gợi ý 2</label><input type="text" id="dh2" style="width:100%" value="${esc(d.h2)}"></div></div>
  <div class="fg"><label>Giải thích đáp án</label><textarea id="dx" style="min-height:60px">${esc(d.explanation)}</textarea></div>
- <div class="row"><button class="btn" onclick="saveDraft()">💾 ${editId?"Lưu thay đổi":"Thêm câu hỏi"}</button>${editId?`<button class="btn sec" onclick="editId=null;draft=null;qForm()">Hủy sửa</button>`:""}</div></div>`}
-function syncDraft(){if(!$("dq"))return;const d=draft;d.question=$("dq").value;d.explanation=$("dx").value;d.h1=$("dh1").value;d.h2=$("dh2").value;
+ <div class="row"><button class="btn" onclick="saveDraft()">💾 ${editId?"Lưu thay đổi":"Thêm câu hỏi"}</button>${editId&&neighborId(editId)?`<button class="btn blue" onclick="saveDraft(true)">💾 Lưu & sửa câu kế tiếp ➜</button>`:""}${editId?`<button class="btn sec" onclick="cancelEdit()">Hủy sửa</button>`:""}</div></div>`}
+function cancelEdit(){editId=null;draft=null;if($("qmodalHost"))closeModal();else qForm()}
+function syncDraft(){if(!$("dq"))return;const d=draft;d.question=$("dq").value;d.explanation=$("dx").value;d.h1=$("dh1").value;d.h2=$("dh2").value;if($("dles"))d.lesson=$("dles").value;
  if(d.type==="mc"){d.options=[...document.querySelectorAll(".dopt")].map(i=>i.value);const r=document.querySelector('input[name=dans]:checked');if(r)d.answer=+r.value}
  else{const t=[...document.querySelectorAll(".dit")],a=[...document.querySelectorAll(".dia")];d.items=t.map((x,i)=>({text:x.value,answer:a[i].value==="1"}))}}
 function rmOpt(i){draft.options.splice(i,1);if(draft.answer===i)draft.answer=0;else if(draft.answer>i)draft.answer--;qForm()}
 function validateQ(q){const e=[];if(!String(q.question||"").trim())e.push("Chưa có nội dung câu hỏi");
  if(q.type==="mc"){if((q.options||[]).filter(o=>String(o).trim()).length<2)e.push("Cần ít nhất 2 phương án");if(!(q.answer>=0&&q.answer<(q.options||[]).length))e.push("Đáp án không hợp lệ");const ns=(q.options||[]).map(norm);if(new Set(ns).size<ns.length)e.push("Có phương án trùng nhau")}
  else{if((q.items||[]).length<2)e.push("Câu đúng/sai cần ít nhất 2 ý");if((q.items||[]).some(i=>!String(i.text||"").trim()))e.push("Có ý chưa có nội dung")}return e}
-function saveDraft(){syncDraft();const d=draft;let q={id:editId||newId(),lesson:editId?D.questions.find(x=>x.id===editId).lesson:B.l,type:d.type,level:d.level,question:d.question.trim(),hints:[d.h1.trim(),d.h2.trim()],explanation:d.explanation.trim()};
+function saveDraft(next){syncDraft();const d=draft,nid=next&&editId?neighborId(editId):null;let q={id:editId||newId(),lesson:editId?(d.lesson||D.questions.find(x=>x.id===editId).lesson):B.l,type:d.type,level:d.level,question:d.question.trim(),hints:[d.h1.trim(),d.h2.trim()],explanation:d.explanation.trim()};
  if(d.type==="mc"){const keep=d.options.map((v,i)=>({v:v.trim(),i})).filter(z=>z.v);q.options=keep.map(z=>z.v);q.answer=keep.findIndex(z=>z.i===d.answer)}else{q.items=d.items.map(i=>({text:i.text.trim(),answer:i.answer}));if(!q.question)q.question=TF_STEM}
  const er=validateQ(q);if(er.length)return toast(er[0],"err");
- if(editId){const k=D.questions.findIndex(x=>x.id===editId);D.questions[k]=q}else D.questions.push(q);saveD();toast(editId?"✅ Đã lưu":"✅ Đã thêm câu hỏi");const t=d.type,lv=d.level;editId=null;draft=blankDraft(t,lv);bankPanel()}
-function bkList(){let list=qOf(B.l).filter(q=>B.flt==="all"||q.type===B.flt);
- $("bkList").innerHTML=list.length?list.map((q,k)=>`<div class="qi"><div class="top"><span><b>${k+1}.</b> <span class="pill">${typeName[q.type]}</span>${lvPill(q)}</span><span class="row"><button class="btn sm sec" onclick="editQ('${q.id}')">✏ Sửa</button><button class="btn sm sec" onclick="dupQ('${q.id}')">⧉ Nhân đôi</button><button class="btn sm red" onclick="delQ('${q.id}')">🗑</button></span></div><div>${esc(q.question)}</div><div class="muted" style="font-size:13.5px">${q.type==="mc"?q.options.map((o,i)=>i===q.answer?`<b style="color:#166534">✔ ${L[i]}. ${esc(o)}</b>`:`${L[i]}. ${esc(o)}`).join("<br>"):q.items.map((it,i)=>`${AB[i]}) ${esc(it.text)} → <b>${it.answer?"Đúng":"Sai"}</b>`).join("<br>")}</div></div>`).join(""):`<div class="empty">Chưa có câu hỏi.</div>`}
-function editQ(id){const q=D.questions.find(x=>x.id===id);editId=id;draft={type:q.type,level:q.level||1,question:q.question,options:q.type==="mc"?[...q.options]:["","","",""],answer:q.answer||0,items:q.type==="tf"?q.items.map(i=>({...i})):[0,1,2,3].map(()=>({text:"",answer:true})),h1:q.hints?.[0]||"",h2:q.hints?.[1]||"",explanation:q.explanation||""};while(draft.items.length<4)draft.items.push({text:"",answer:true});B.mode="manual";bankPanel();scrollTo({top:$("bkPanel").offsetTop-80,behavior:"smooth"})}
+ if(editId){const k=D.questions.findIndex(x=>x.id===editId);D.questions[k]=q}else D.questions.push(q);saveD();toast(editId?"✅ Đã lưu":"✅ Đã thêm câu hỏi");const t=d.type,lv=d.level;editId=null;draft=blankDraft(t,lv);if($("qmodalHost"))closeModal();bankPanel();if(nid)editQ(nid)}
+function qItemHTML(q,k,rv){const er=validateQ(q);
+ return `<div class="qi" style="${er.length?"border-color:#f59e0b;background:#fffbeb":""}"><div class="top"><span>${rv?`<input type="checkbox" ${RV.sel.has(q.id)?"checked":""} onchange="revSel('${q.id}',this.checked)"> `:""}<b>${k+1}.</b> ${rv&&RV.scope==="grade"?`<span class="pill">${esc(lessonShort(q.lesson))}</span>`:""}<span class="pill">${typeName[q.type]}</span>${lvPill(q)}${er.length?`<span class="bad2">⚠ ${esc(er[0])}</span>`:""}</span><span class="row"><button class="btn sm" onclick="editQ('${q.id}')">✏ Sửa</button><button class="btn sm sec" onclick="dupQ('${q.id}')">⧉ Nhân đôi</button><button class="btn sm red" onclick="delQ('${q.id}')">🗑 Xóa</button></span></div><div style="white-space:pre-wrap">${esc(q.question)}</div><div class="muted" style="font-size:13.5px">${q.type==="mc"?(q.options||[]).map((o,i)=>i===q.answer?`<b style="color:#166534">✔ ${L[i]}. ${esc(o)}</b>`:`${L[i]}. ${esc(o)}`).join("<br>"):(q.items||[]).map((it,i)=>`${AB[i]}) ${esc(it.text)} → <b>${it.answer?"Đúng":"Sai"}</b>`).join("<br>")}${q.explanation?`<br><i>Giải thích: ${esc(q.explanation)}</i>`:""}</div></div>`}
+function bkList(){const list=qOf(B.l).filter(q=>B.flt==="all"||q.type===B.flt);$("bkList").innerHTML=list.length?list.map((q,k)=>qItemHTML(q,k)).join(""):`<div class="empty">Chưa có câu hỏi.</div>`}
+/* ---- rà soát & sửa ---- */
+let RV={scope:"lesson",type:"all",lv:0,q:"",bad:false,sel:new Set(),lim:50};
+function scopeIds(){return RV.scope==="lesson"?[B.l]:lessonsOf(B.g).map(l=>l.id)}
+function revList(){const ids=scopeIds(),ord=Object.fromEntries(ids.map((id,i)=>[id,i])),nq=norm(RV.q);
+ return D.questions.filter(q=>ids.includes(q.lesson)&&(RV.type==="all"||q.type===RV.type)&&(!RV.lv||(q.level||1)===RV.lv)&&(!RV.bad||validateQ(q).length)&&(!nq||norm(q.question+" "+(q.options||[]).join(" ")+" "+(q.items||[]).map(i=>i.text).join(" ")).includes(nq))).map((q,i)=>({q,i})).sort((a,b)=>ord[a.q.lesson]-ord[b.q.lesson]||a.i-b.i).map(x=>x.q)}
+function curList(){return B.mode==="review"?revList():qOf(B.l).filter(q=>B.flt==="all"||q.type===B.flt)}
+function neighborId(id){const l=curList(),i=l.findIndex(q=>q.id===id);return i>=0&&l[i+1]?l[i+1].id:null}
+const sg=(arr,cur,fn)=>`<span class="seg">${arr.map(([k,t])=>`<button class="${String(cur)===String(k)?"on":""}" onclick="${fn}(${typeof k==="number"?k:`'${k}'`})">${t}</button>`).join("")}</span>`;
+function rvSet(k,v){RV[k]=v;RV.lim=50;bankPanel()}
+function revBody(){const list=revList(),show=list.slice(0,RV.lim),nbad=D.questions.filter(q=>scopeIds().includes(q.lesson)&&validateQ(q).length).length;
+ return `<div class="fb info">Duyệt từng câu và bấm <b>✏ Sửa</b> để chỉnh nội dung, đáp án, mức độ hoặc chuyển sang bài khác. Trong cửa sổ sửa có nút <b>Lưu & sửa câu kế tiếp</b> để rà soát liên tục.${nbad?` <b class="bad2">Có ${nbad} câu bị lỗi trong phạm vi này.</b>`:""}</div>
+ <div class="row" style="margin-bottom:8px">${sg([["lesson","Bài này"],["grade","Cả "+gName(B.g)]],RV.scope,"rvS")}${sg([["all","Mọi dạng"],["mc","Trắc nghiệm"],["tf","Đúng/Sai"]],RV.type,"rvT")}${sg([[0,"Mọi mức"],[1,"Biết"],[2,"Hiểu"],[3,"Vận dụng"]],RV.lv,"rvL")}</div>
+ <div class="row" style="margin-bottom:8px"><input type="text" id="rvq" placeholder="🔍 Tìm trong nội dung câu hỏi" value="${esc(RV.q)}" style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')rvSet('q',this.value)" onchange="rvSet('q',this.value)"><label><input type="checkbox" ${RV.bad?"checked":""} onchange="rvSet('bad',this.checked)"> Chỉ câu bị lỗi</label></div>
+ <div class="row" style="margin-bottom:8px;padding:8px;background:#f0fdf4;border-radius:10px"><label><input type="checkbox" onchange="revAll(this.checked)" ${list.length&&list.every(q=>RV.sel.has(q.id))?"checked":""}> Chọn tất cả (${list.length})</label><span>Đã chọn <b id="rvn">${RV.sel.size}</b> câu:</span><button class="btn sm sec" onclick="revLv(1)">→ Biết</button><button class="btn sm sec" onclick="revLv(2)">→ Hiểu</button><button class="btn sm sec" onclick="revLv(3)">→ Vận dụng</button><button class="btn sm blue" onclick="revMove()">Chuyển bài…</button><button class="btn sm red" onclick="revDel()">🗑 Xóa</button></div>
+ <div>${show.length?show.map((q,k)=>qItemHTML(q,k,true)).join(""):`<div class="empty">Không có câu nào phù hợp bộ lọc.</div>`}</div>${list.length>show.length?`<button class="btn sec" onclick="RV.lim+=50;bankPanel()">Hiện thêm (còn ${list.length-show.length} câu)</button>`:""}`}
+const rvS=v=>rvSet("scope",v),rvT=v=>rvSet("type",v),rvL=v=>rvSet("lv",v);
+function revSel(id,on){on?RV.sel.add(id):RV.sel.delete(id);$("rvn")&&($("rvn").textContent=RV.sel.size)}
+function revAll(on){revList().forEach(q=>on?RV.sel.add(q.id):RV.sel.delete(q.id));bankPanel()}
+function selQs(){const a=D.questions.filter(q=>RV.sel.has(q.id));if(!a.length)toast("Hãy tích chọn ít nhất 1 câu","err");return a}
+function revLv(v){const a=selQs();if(!a.length)return;a.forEach(q=>q.level=v);saveD();toast(`✅ Đã đổi ${a.length} câu sang mức “${LV[v]}”`);bankPanel()}
+function revDel(){const a=selQs();if(!a.length)return;if(!confirm(`Xóa ${a.length} câu hỏi đã chọn?`))return;D.questions=D.questions.filter(q=>!RV.sel.has(q.id));RV.sel.clear();saveD();bankPanel()}
+function revMove(){const a=selQs();if(!a.length)return;modal(`<h3>Chuyển ${a.length} câu sang bài</h3><select id="mvl" style="width:100%;margin:8px 0">${chaptersOf(B.g).map(c=>`<optgroup label="${esc(c.name)}">${c.lessons.map(l=>`<option value="${l.id}">Bài ${l.no}. ${esc(l.name)}</option>`).join("")}</optgroup>`).join("")}</select><div class="row"><button class="btn" onclick="revMoveDo()">Chuyển</button><button class="btn sec" onclick="closeModal()">Hủy</button></div>`)}
+function revMoveDo(){const id=$("mvl").value;D.questions.forEach(q=>{if(RV.sel.has(q.id))q.lesson=id});RV.sel.clear();saveD();closeModal();toast("✅ Đã chuyển bài");bankPanel()}
+function editQ(id){const q=D.questions.find(x=>x.id===id);editId=id;draft={lesson:q.lesson,type:q.type,level:q.level||1,question:q.question,options:q.type==="mc"?[...q.options]:["","","",""],answer:q.answer||0,items:q.type==="tf"?q.items.map(i=>({...i})):[0,1,2,3].map(()=>({text:"",answer:true})),h1:q.hints?.[0]||"",h2:q.hints?.[1]||"",explanation:q.explanation||""};while(draft.items.length<4)draft.items.push({text:"",answer:true});if($("bkForm"))$("bkForm").innerHTML="";modal(`<div id="qmodalHost"></div>`,true);qForm()}
 function dupQ(id){const k=D.questions.findIndex(x=>x.id===id),c=JSON.parse(JSON.stringify(D.questions[k]));c.id=newId();D.questions.splice(k+1,0,c);saveD();bankPanel()}
 function delQ(id){const q=D.questions.find(x=>x.id===id);if(!confirm("Xóa câu hỏi này?\n\n“"+q.question.slice(0,80)+"”"))return;D.questions=D.questions.filter(x=>x.id!==id);saveD();bankPanel()}
 
