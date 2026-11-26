@@ -38,6 +38,11 @@ html.m .wsl{flex-direction:row;flex-wrap:wrap}html.m .wsx{flex:1 1 44%}@media(ma
 html.m .egrid{grid-template-columns:repeat(2,1fr);gap:8px}html.m .ecard{height:250px}html.m .ew{font-size:17px}html.m .eimg{height:105px}html.m .etabs button{min-width:46%;padding:9px 4px;font-size:13px}html.m .fgrid{grid-template-columns:repeat(3,1fr)}html.m .lfp{font-size:18px}html.m .gtxt{min-width:0;width:100%}
 @media(max-width:760px){.egrid{grid-template-columns:repeat(2,1fr);gap:8px}.ecard{height:250px}.etabs button{min-width:46%}.fgrid{grid-template-columns:repeat(3,1fr)}}
 `;const s=document.createElement("style");s.id="eslcss";s.textContent=css;document.head.appendChild(s)})();
+(function(){const s=document.createElement("style");s.id="eslcss2";s.textContent=`
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pcol{display:flex;flex-direction:column;gap:8px}.pc{border:2px solid #86efac;background:#fff;border-radius:12px;padding:10px;font-size:15px;font-weight:700;cursor:pointer;text-align:left;min-height:46px;color:#14281d}.pc.sel{background:#15803d;color:#fff;border-color:#15803d}.pc.ok{background:#bbf7d0;border-color:#16a34a}.pc.rev{background:#fde68a;border-color:#d97706}.pc.shake{animation:eshake .45s;border-color:#f87171}.pc:disabled{cursor:default}
+.lfn{border:0;background:#0284c7;color:#fff;border-radius:8px;font-size:12px;font-weight:800;padding:2px 6px;margin-right:2px;cursor:pointer;vertical-align:middle}
+.lfclip{margin:10px 0;padding:8px;background:#0b1f14;border-radius:12px;text-align:center}.lfclip video,.lfclip iframe{width:100%;max-width:560px;aspect-ratio:16/9;border:0;border-radius:10px;background:#000}.lfclip .btn{margin-top:6px}
+`;document.head.appendChild(s)})();
 /* =====================================================================
    SCIENCE ESL – LEARN & PLAY  (module rời, chạy kèm index.html)
    Tệp này: esl.js  ·  Dữ liệu nội dung: esl-data.json (xuất từ tab 🔤 ESL)
@@ -64,8 +69,8 @@ E.u={rnd,shuffle,pick,reEsc,uid,num};
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("khtn-esl",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
 async function idbSet(k,v){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
-const blank=()=>({app:"khtn-esl",v:1,savedAt:0,words:[],sents:[],games:{},listen:{},quiz:{},cfg:{voice:"",rate:.9}});
-function norm(d){const b=blank();d=d||{};return{app:"khtn-esl",v:1,savedAt:+d.savedAt||0,words:Array.isArray(d.words)?d.words:[],sents:Array.isArray(d.sents)?d.sents:[],games:d.games&&typeof d.games==="object"?d.games:{},listen:d.listen&&typeof d.listen==="object"?d.listen:{},quiz:d.quiz&&typeof d.quiz==="object"?d.quiz:{},cfg:Object.assign(b.cfg,d.cfg||{})}}
+const blank=()=>({app:"khtn-esl",v:1,savedAt:0,words:[],sents:[],games:{},listen:{},quiz:{},items:{},pairs:{},cfg:{voice:"",rate:.9}});
+function norm(d){const b=blank();d=d||{};return{app:"khtn-esl",v:1,savedAt:+d.savedAt||0,words:Array.isArray(d.words)?d.words:[],sents:Array.isArray(d.sents)?d.sents:[],games:d.games&&typeof d.games==="object"?d.games:{},listen:d.listen&&typeof d.listen==="object"?d.listen:{},quiz:d.quiz&&typeof d.quiz==="object"?d.quiz:{},items:d.items&&typeof d.items==="object"?d.items:{},pairs:d.pairs&&typeof d.pairs==="object"?d.pairs:{},cfg:Object.assign(b.cfg,d.cfg||{})}}
 let DATA=blank(),loaded=false,saveT=0;
 E.data=()=>DATA;
 E.loaded=()=>loaded;
@@ -94,13 +99,20 @@ const GAMEDEF={
  search:{name:"WORD SEARCH",icon:"🔠",vn:"Tìm từ trong bảng chữ",col:"#e0f2fe"},
  flip:{name:"FLIP & MATCH",icon:"🃏",vn:"Lật thẻ ghép cặp",col:"#fce7f3"},
  fill:{name:"FILL IN THE BLANKS",icon:"✍️",vn:"Điền từ vào câu",col:"#ede9fe"},
- order:{name:"SENTENCE ORDER",icon:"🔀",vn:"Sắp xếp từ thành câu",col:"#fae8ff"},
+ order:{name:"SENTENCE ORDER",icon:"🔀",vn:"Sắp xếp từ/cụm từ thành câu",col:"#fae8ff"},
+ odd:{name:"ODD ONE OUT",icon:"🧩",vn:"Tìm từ khác loại",col:"#ccfbf1"},
+ tf:{name:"TRUE OR FALSE",icon:"✅",vn:"Đúng hay sai",col:"#fee2e2"},
+ fix:{name:"FIX THE MISTAKE",icon:"🛠️",vn:"Sửa câu sai",col:"#e0e7ff"},
+ pairs:{name:"MATCH PAIRS",icon:"🔗",vn:"Ghép cặp",col:"#fef3c7"},
  quiz:{name:"SCIENCE QUIZ",icon:"⚡",vn:"Trắc nghiệm nhanh",col:"#ffedd5"}};
-const GORDER=["match","guess","search","flip","fill","order","quiz"];
+const GORDER=["match","guess","search","flip","fill","order","odd","tf","fix","pairs","quiz"],GPLAY=GORDER.filter(t=>t!=="quiz");
 const GDEFAULT=["match","guess","flip"];
-const gcfgDefault=t=>({match:{n:6,pts:10,plays:0},guess:{n:6,pts:10,bonus:5,tries:3,plays:0},search:{n:8,pts:10,time:0,plays:0},flip:{n:6,pts:10,mode:"vi",plays:0},fill:{n:6,pts:10,mode:"bank",plays:0},order:{n:5,pts:10,plays:0},quiz:{n:8,pts:10,time:0,qs:"",plays:0}})[t];
-function gamesOf(lid){const g=DATA.games[lid];if(Array.isArray(g))return g.filter(x=>GAMEDEF[x.type]);return GDEFAULT.map(t=>({type:t,cfg:gcfgDefault(t),auto:true}))}
-E.GAMEDEF=GAMEDEF;E.GORDER=GORDER;E.gamesOf=gamesOf;E.gcfgDefault=gcfgDefault;
+const gcfgDefault=t=>({match:{n:6,pts:10,plays:0},guess:{n:6,pts:10,bonus:5,tries:3,plays:0},search:{n:8,pts:10,time:0,plays:0},flip:{n:6,pts:10,mode:"vi",plays:0},fill:{n:6,pts:10,mode:"bank",plays:0},order:{n:5,pts:10,plays:0},odd:{n:5,pts:10,plays:0},tf:{n:5,pts:10,plays:0},fix:{n:5,pts:10,plays:0},pairs:{n:6,pts:10,plays:0},quiz:{n:8,pts:10,time:0,qs:"",plays:0}})[t];
+const its=(lid,t)=>(DATA.items[lid]||[]).filter(i=>i.types&&i.types.includes(t));const prs=lid=>DATA.pairs[lid]||[];
+function gamesOf(lid){const g=DATA.games[lid];if(Array.isArray(g))return g.filter(x=>GAMEDEF[x.type]&&x.type!=="quiz");
+ const have=[["order",its(lid,"scramble").length],["fill",its(lid,"fill").length],["tf",its(lid,"tf").length],["odd",its(lid,"odd").length],["pairs",prs(lid).length],["fix",its(lid,"fix").length]].filter(x=>x[1]).map(x=>x[0]).slice(0,2);
+ const t=["match","flip",...(have.length?have:["guess"])];return t.map(t=>({type:t,cfg:gcfgDefault(t),auto:true}))}
+E.GAMEDEF=GAMEDEF;E.GORDER=GORDER;E.its=its;E.prs=prs;E.gamesOf=gamesOf;E.gcfgDefault=gcfgDefault;
 
 /* ---------- giọng đọc & âm thanh ---------- */
 const voices=()=>{try{return(window.speechSynthesis?speechSynthesis.getVoices():[]).filter(v=>/^en/i.test(v.lang))}catch(e){return[]}};
@@ -153,7 +165,7 @@ E.u.cmp=cmp;
    ===================================================================== */
 const S={lid:null,tab:"kw",flip:{},filter:"all",showVi:{},ex:{},game:null,lf:null};
 E.S=S;
-const TABS=[["kw","🔤","KEY WORDS"],["ss","💬","USEFUL SENTENCES"],["play","🎮","LET'S PLAY"],["lf","🎧","LISTEN & FILL"]];
+const TABS=[["kw","🔤","KEY WORDS"],["ss","💬","USEFUL SENTENCES"],["lf","🎧","LISTEN & FILL"],["play","🎮","LET'S PLAY"],["qz","❓","QUIZ"]];
 const fmtT=s=>s<60?s+" giây":Math.round(s/60)+" phút";
 const imgOf=(w,cls)=>w.img?`<img class="${cls||"eimg"}" src="${w.img}" alt="${esc(w.en)}" loading="lazy">`:`<div class="${cls||"eimg"} eph">🔬</div>`;
 
@@ -169,9 +181,9 @@ function head(l){const ws=lw(l.id),rc=rec(l.id),nl=ws.filter(w=>rc.learned.inclu
 E.headUpd=function(){const e=G("ehead");if(!e||!S.lid)return;const ws=lw(S.lid),rc=rec(S.lid),nl=ws.filter(w=>rc.learned.includes(w.id)).length,nk=ws.filter(w=>rc.st[w.id]===1).length;
  e.innerHTML=ws.length?`Đã học <b>${nl}/${ws.length}</b> từ · Nhớ <b>${nk}</b> · ⏱ ${fmtT(rc.sec||0)}${rc.done?` · <span class="edone">✅ Hoàn thành</span>`:""}`:""};
 function draw(){const r=G("eslroot");if(!r)return;const l=findLesson(S.lid);if(!l)return;
- r.innerHTML=head(l)+`<div class="etabs">${TABS.map(([k,ic,n])=>`<button class="${S.tab===k?"on":""}" onclick="ESL.tab('${k}')"><span>${ic}</span> ${n}</button>`).join("")}</div><div id="ebody">${S.tab==="kw"?kwHTML(l):S.tab==="ss"?ssHTML(l):S.tab==="play"?playHTML(l):lfHTML(l)}</div>`;
- if(S.tab==="play"&&S.game)gameStart(S.game.idx,true)}
-E.tab=k=>{stopSound();S.tab=k;S.game=null;draw()};
+ r.innerHTML=head(l)+`<div class="etabs">${TABS.map(([k,ic,n])=>`<button class="${S.tab===k?"on":""}" onclick="ESL.tab('${k}')"><span>${ic}</span> ${n}</button>`).join("")}</div><div id="ebody">${S.tab==="kw"?kwHTML(l):S.tab==="ss"?ssHTML(l):S.tab==="play"?playHTML(l):S.tab==="qz"?`<div id="gbox" class="gbox"></div>`:lfHTML(l)}</div>`;
+ if(S.tab==="play"&&S.game)gameStart(S.game.idx,true);if(S.tab==="qz")gameStart(-1)}
+E.tab=k=>{stopSound();S.tab=k;S.game=k==="qz"?{idx:-1,type:"quiz"}:null;draw()};
 E.edit=lid=>{const l=findLesson(lid);if(!l)return;AS.g=l.g;AS.lesson=lid;AS.tab="v";go({name:"adm",adm:"esl"})};
 
 /* ---------- 1. KEY WORDS ---------- */
@@ -219,10 +231,10 @@ function playHTML(l){const ws=lw(l.id);if(!ws.length)return empty("Bài này ch�
 E.play=i=>{S.game={idx:i};draw()};
 E.playType=t=>{S.tab="play";S.game={idx:-1,type:t};draw()};
 E.quit=()=>{stopSound();S.game=null;draw()};
-function gameStart(i){const l=findLesson(S.lid),gs=gamesOf(l.id),g=i>=0?gs[i]:(S.game&&S.game.type?{type:S.game.type,cfg:gcfgDefault(S.game.type)}:null),box=G("gbox");if(!g||!box){S.game=null;return draw()}
+function gameStart(i){const l=findLesson(S.lid),gs=gamesOf(l.id),g=i>=0?gs[i]:(S.game&&S.game.type?{type:S.game.type,cfg:S.game.type==="quiz"?Object.assign({},gcfgDefault("quiz"),{n:5},DATA.cfg.quiz||{}):gcfgDefault(S.game.type)}:null),box=G("gbox");if(!g||!box){S.game=null;return draw()}
  const all=lw(l.id),sel=g.cfg.words&&g.cfg.words.length?all.filter(w=>g.cfg.words.includes(w.id)):all,words=sel.length?sel:all;
  const d=GAMEDEF[g.type];
- box.innerHTML=`<div class="gh"><button class="btn sm sec" onclick="ESL.quit()">⬅ Chọn game khác</button><b>${d.icon} ${d.name}</b></div><div id="gin"></div>`;
+ box.innerHTML=`<div class="gh">${S.tab==="qz"?"":`<button class="btn sm sec" onclick="ESL.quit()">⬅ Chọn game khác</button>`}<b>${S.tab==="qz"?"❓ QUIZ – Câu hỏi trắc nghiệm":d.icon+" "+d.name}</b></div><div id="gin"></div>`;
  const inner=G("gin");
  const ctx={lesson:l,words,all,cfg:g.cfg,type:g.type,pts:num(g.cfg.pts,10,1,100),
   finish(score,max,note){upd(l.id,r=>{const o=r.games[g.type]||(r.games[g.type]={best:0,max:0,plays:0,last:0,lastMax:0});o.plays++;o.last=score;o.lastMax=max;if(!o.max||score/Math.max(1,max)>=o.best/Math.max(1,o.max)){o.best=score;o.max=max}o.at=Date.now()});E.headUpd();resultScreen(inner,ctx,score,max,note)},
@@ -230,7 +242,7 @@ function gameStart(i){const l=findLesson(S.lid),gs=gamesOf(l.id),g=i>=0?gs[i]:(S
  const fn=GAMES[g.type];if(!fn){inner.innerHTML=`<div class="empty">Trò chơi này chưa sẵn sàng.</div>`;return}
  try{fn(inner,ctx)}catch(e){console.error(e);inner.innerHTML=`<div class="empty">Có lỗi khi mở trò chơi. Con thử trò khác nhé.</div>`}}
 function resultScreen(box,ctx,score,max,note){const p=max?score/max:0,st=p>=.9?3:p>=.6?2:p>=.3?1:0;
- box.innerHTML=`<div class="gres"><div class="gstars">${"⭐".repeat(st)}${"☆".repeat(3-st)}</div><h3>${p>=.9?"Tuyệt vời! 🎉":p>=.6?"Làm tốt lắm! 👏":p>=.3?"Cố gắng tốt! 💪":"Chưa sao đâu, thử lại nhé! 🌱"}</h3><div class="gsc">${score} / ${max} điểm</div>${note?`<p class="muted">${note}</p>`:""}<div class="row" style="justify-content:center"><button class="btn" onclick="ESL.again()">🔁 Chơi lại</button><button class="btn sec" onclick="ESL.quit()">⬅ Chọn game khác</button></div></div>`;
+ box.innerHTML=`<div class="gres"><div class="gstars">${"⭐".repeat(st)}${"☆".repeat(3-st)}</div><h3>${p>=.9?"Tuyệt vời! 🎉":p>=.6?"Làm tốt lắm! 👏":p>=.3?"Cố gắng tốt! 💪":"Chưa sao đâu, thử lại nhé! 🌱"}</h3><div class="gsc">${score} / ${max} điểm</div>${note?`<p class="muted">${note}</p>`:""}<div class="row" style="justify-content:center"><button class="btn" onclick="ESL.again()">🔁 Chơi lại</button>${S.tab==="qz"?"":`<button class="btn sec" onclick="ESL.quit()">⬅ Chọn game khác</button>`}</div></div>`;
  E.again=()=>ctx.again()}
 E.gameStart=gameStart;
 
@@ -244,17 +256,34 @@ function lfHTML(l){const c=lfCfg(l.id);if(!c||!c.text)return empty("Bài này ch
  const L=S.lf,toks=tok(c.text),hid=(c.hide||[]).filter(i=>toks[i]&&ISW.test(toks[i]));
  if(!L.bank)L.bank=shuffle(hid.map(i=>toks[i]));
  const ws=lw(l.id),max=c.maxPlays>0?c.maxPlays:0,left=max?Math.max(0,max-L.plays):null;
- const ok=hid.filter(i=>L.res[i]===true).length,all=hid.length;
+ const ok=hid.filter(i=>L.res[i]===true).length,all=hid.length,hidS=hid.slice().sort((a,b)=>a-b);
  const para=toks.map((t,i)=>{if(!hid.includes(i))return esc(t);const v=L.vals[i]||"",st=L.res[i];
   const w=ws.find(x=>cmp(x.en,t)),h=L.hint>0&&st!==true?`<small class="hnt">${L.hint>=3?"→ "+esc(t):L.hint===2?esc(t[0])+"… ("+t.length+")":(w&&w.vi?esc(w.vi):esc(t[0])+"…")}</small>`:"";
-  return `<span class="lfw"><input class="lfi ${st===true?"ok":st===false?"no":""}" data-i="${i}" value="${esc(v)}" style="width:${Math.max(4,t.length+2)}ch" ${st===true?"readonly":""} autocomplete="off" autocapitalize="off" spellcheck="false" oninput="ESL.lfIn(${i},this.value)" onfocus="ESL.lfFocus(${i})">${h}</span>`}).join("");
+  const hn=hidS.indexOf(i)+1;return `<span class="lfw"><button class="lfn" title="Nghe vị trí số ${hn}" onclick="ESL.lfClip(${hn})">${hn}▶</button><input class="lfi ${st===true?"ok":st===false?"no":""}" data-i="${i}" value="${esc(v)}" style="width:${Math.max(4,t.length+2)}ch" ${st===true?"readonly":""} autocomplete="off" autocapitalize="off" spellcheck="false" oninput="ESL.lfIn(${i},this.value)" onfocus="ESL.lfFocus(${i})">${h}</span>`}).join("");
  const showAnsOK=L.checks>=1&&(ok===all||L.checks>=3||c.showAns);
  return `<div class="lf"><h3>🎧 ${esc(c.title||"Listen and fill in the blanks")}</h3>
  <div class="row"><button class="btn" onclick="ESL.lfPlay(1)" ${left===0?"disabled":""}>▶ Play Audio</button><button class="btn sec" onclick="ESL.lfPlay(1)" ${left===0?"disabled":""}>🔁 Nghe lại</button><button class="btn sec" onclick="ESL.lfPlay(.7)" ${left===0?"disabled":""}>🐢 Nghe chậm</button><button class="btn sm sec" onclick="ESL.u.stop()">⏹</button>${max?`<span class="muted">Còn ${left} lần nghe</span>`:""}</div>
- <div class="lfp">${para}</div>
+ ${L.clipView?clipHTML(L.clipView):""}<div class="lfp">${para}</div>
  ${c.bank!==false&&L.bank.length?`<div class="lfb"><b>Word bank:</b> ${L.bank.map(w=>`<button class="chip ${hid.some(i=>cmp(L.vals[i],w)&&L.res[i]===true)?"used":""}" onclick="ESL.lfBank(this.dataset.w)" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</div>`:""}
  <div class="row" style="margin-top:10px"><button class="btn" onclick="ESL.lfCheck()">✔ Check Answer</button>${c.hint!==false?`<button class="btn warn" onclick="ESL.lfHint()">💡 Show Hint</button>`:""}${showAnsOK?`<button class="btn sec" onclick="ESL.lfShow()">📖 Show Answer</button>`:""}<button class="btn sec" onclick="ESL.lfReset()">🔄 Làm lại</button></div>
  ${L.checks?`<div class="efb ${ok===all?"good":"hint"}">${ok===all?`🎉 Chính xác hết rồi! Điểm: <b>${ok}/${all}</b>`:`Điểm hiện tại: <b>${ok}/${all}</b>. ${KIND[Math.min(L.checks,3)-1]}`}</div>`:""}</div>`}
+/* clip 1–5: audio, video tải lên, link YouTube/Drive hoặc link tệp; thiếu clip thì máy đọc câu chứa chỗ trống */
+const ytId=u=>{const m=/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/.exec(u||"");return m?m[1]:""};
+function clipHTML(v){const close=`<button class="btn sm sec" onclick="ESL.lfClipClose()">✖ Đóng</button>`;
+ if(v.t==="v")return `<div class="lfclip"><video controls autoplay playsinline src="${v.src}"></video>${close}</div>`;
+ if(v.t==="yt")return `<div class="lfclip"><iframe src="https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1" allow="autoplay;encrypted-media" allowfullscreen></iframe>${close}</div>`;
+ if(v.t==="dr")return `<div class="lfclip"><iframe src="https://drive.google.com/file/d/${v.id}/preview" allowfullscreen></iframe>${close}</div>`;
+ return ""}
+E.lfClipClose=()=>{if(S.lf)S.lf.clipView=null;draw()};
+E.lfClip=n=>{const c=lfCfg(S.lid),L=S.lf;if(!c||!L)return;const max=c.maxPlays>0?c.maxPlays:0;if(max&&L.plays>=max)return toast("Con đã dùng hết số lần nghe.","err");
+ const{toks,hid}=lfIdx(c),hs=hid.slice().sort((a,b)=>a-b),ti=hs[n-1],clip=(c.clips||{})[n];L.plays++;upd(S.lid,r=>{r.listen.listens++});stopSound();L.clipView=null;
+ if(clip){const src=String(clip);
+  if(/^data:video/i.test(src)||/\.(mp4|webm|mov)(\?|$)/i.test(src))L.clipView={t:"v",src};
+  else if(/^data:audio/i.test(src)||/\.(mp3|wav|m4a|ogg)(\?|$)/i.test(src))playSrc(src);
+  else if(ytId(src))L.clipView={t:"yt",id:ytId(src)};
+  else{const d=/drive\.google\.com\/file\/d\/([\w-]+)/.exec(src);if(d)L.clipView={t:"dr",id:d[1]};else window.open(src,"_blank","noopener")}}
+ else{let pos=0,off=0;for(let k=0;k<ti;k++)pos+=toks[k].length;const txt=toks.join("");const re=/[^.!?\n]+[.!?]*/g;let m,sent=txt;while((m=re.exec(txt))){if(pos>=m.index&&pos<m.index+m[0].length){sent=m[0].trim();break}}say(sent,1)}
+ draw()};
 function lfIdx(c){const toks=tok(c.text);return{toks,hid:(c.hide||[]).filter(i=>toks[i]&&ISW.test(toks[i]))}}
 E.lfIn=(i,v)=>{if(S.lf)S.lf.vals[i]=v;if(S.lf)delete S.lf.res[i]};
 E.lfFocus=i=>{if(S.lf)S.lf.focus=i};
@@ -374,100 +403,141 @@ GAMES.flip=function(box,ctx){const ws=pick(ctx.words,cnt(ctx,6,8)),pts=ctx.pts,m
    const sc=Math.max(0,pairs*pts);setSc(box,sc);if(pairs===ws.length){const full=ws.length*pts,fin=Math.max(Math.round(full*.3),full-Math.max(0,moves-ws.length)*Math.round(pts/4));setTimeout(()=>alive(box)&&ctx.finish(fin,full,`Con hoàn thành sau ${moves} lượt lật.`),700)}}
   else{lock=true;fbox(box,"Chưa phải cặp, con nhớ vị trí rồi thử lại nhé 🌱","hint");setTimeout(()=>{a.el.classList.remove("on");el.classList.remove("on");lock=false},900)}}};
 
-/* ===== GAME 5 – FILL IN THE BLANKS ===== */
-GAMES.fill=function(box,ctx){const pts=ctx.pts,mode=ctx.cfg.mode||"bank",ss=ls(ctx.lesson.id);
- let items=ss.map(s=>({s,cz:cloze(s.en,ctx.all)})).filter(x=>x.cz);
- if(items.length<cnt(ctx,6,10)){ctx.words.filter(w=>w.ex).forEach(w=>{const cz=cloze(w.ex,[w]);if(cz&&!items.some(x=>x.s.en===w.ex))items.push({s:{en:w.ex,vi:w.vi},cz})})}
- items=pick(items,Math.min(items.length,num(ctx.cfg.n,6,1,15)));
- if(!items.length){box.innerHTML=`<div class="empty">Bài này chưa có câu mẫu hoặc câu ví dụ để chơi trò điền từ.</div>`;return}
- let i=0,score=0;
- function round(){if(!alive(box))return;if(i>=items.length)return ctx.finish(score,items.length*pts);
-  const it=items[i],cz=it.cz;let att=0,filled="";
-  const pool=ctx.all.map(w=>w.en).filter(e=>!cmp(e,cz.ans)),more=DATA.words.map(w=>w.en).filter(e=>!cmp(e,cz.ans)&&!pool.includes(e)),opts=shuffle([cz.ans,...pick([...new Set([...pool,...shuffle(more)])],5)]);
-  box.innerHTML=SHELL(score,`<span class="muted">Câu ${i+1}/${items.length}</span>`)+`<div class="gq"><div class="exs big">${esc(cz.pre)}<span class="exbl" id="fbl">＿＿＿＿＿</span>${esc(cz.post)}</div>${it.s.vi?`<div class="muted" style="text-align:center">${esc(it.s.vi)}</div>`:""}
-   ${mode==="type"?`<div class="row" style="justify-content:center;margin-top:10px"><input id="fti" class="gtxt" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Nhập từ…"><button class="btn" id="fok">Kiểm tra</button></div>`:`<div class="row" style="justify-content:center;margin-top:10px">${opts.map(o=>`<button class="chip fopt" draggable="true" data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div>`}</div><div class="gfb efb hint">${mode==="type"?"Nhập từ còn thiếu vào chỗ trống.":"Chọn (hoặc kéo) từ thích hợp vào chỗ trống."}</div>`;
-  const bl=box.querySelector("#fbl");
-  function submit(v){if(!v)return;att++;
-   if(cmp(v,cz.ans)){const g=att===1?pts:att===2?pts*.5:pts*.25;score+=g;bl.textContent=cz.ans;bl.classList.add("ok");setSc(box,score);fbox(box,`🎉 Chính xác!${cz.word&&cz.word.vi?` “${esc(cz.ans)}” nghĩa là “${esc(cz.word.vi)}”.`:""}`,"good");lockUI();if(cz.word)mark(ctx.lesson.id,cz.word.id);i++;setTimeout(round,1500)}
-   else if(att>=3){bl.textContent=cz.ans;bl.classList.add("rev");fbox(box,hintHTML(3,cz.ans,cz.word),"hint");lockUI();i++;setTimeout(round,2600)}
-   else{bl.textContent=v;bl.classList.add("no");setTimeout(()=>{if(alive(box)){bl.textContent="＿＿＿＿＿";bl.classList.remove("no")}},700);fbox(box,KIND[att-1]+"<br>"+hintHTML(att,cz.ans,cz.word),"hint")}}
-  function lockUI(){box.querySelectorAll(".fopt,#fok,#fti").forEach(e=>e.disabled=true)}
-  if(mode==="type"){const inp=box.querySelector("#fti");inp.onkeydown=e=>{if(e.key==="Enter")submit(inp.value.trim())};box.querySelector("#fok").onclick=()=>{submit(inp.value.trim());inp.value=""};setTimeout(()=>{try{inp.focus()}catch(e){}},50)}
-  else{box.onclick=e=>{const b=e.target.closest(".fopt");if(b&&!b.disabled)submit(b.dataset.o)};
-   box.ondragstart=e=>{const b=e.target.closest(".fopt");if(b)e.dataTransfer.setData("text/plain",b.dataset.o)};box.ondragover=e=>{if(e.target.closest("#fbl"))e.preventDefault()};box.ondrop=e=>{if(e.target.closest("#fbl")){e.preventDefault();submit(e.dataTransfer.getData("text/plain"))}}}}
- round()};
+/* ---- dùng chung cho các game dạng "từng câu" ---- */
+const nz=s=>String(s||"").toLowerCase().replace(/[^a-z0-9\s']/g,"").replace(/\s+/g," ").trim();
+const hintC=(n,it,ans)=>n<=1?(it&&it.hint?`💡 Gợi ý 1: ${esc(it.hint)}`:`💡 Gợi ý 1: đáp án có ${String(ans).length} ký tự.`):n===2?`💡 Gợi ý 2: bắt đầu bằng “<b>${esc(String(ans).slice(0,Math.min(String(ans).length,n===2?4:1)))}</b>…”.`:`📖 Đáp án: <b>${esc(ans)}</b>${it&&it.expl?`<br>${esc(it.expl)}`:""}<br>Không sao đâu, con chơi lại để nhớ thêm nhé!`;
+const empt=(box,msg)=>{box.innerHTML=`<div class="empty">${msg}</div>`};
+/* chạy lần lượt từng mục: draw(it,i,next) tự vẽ; gọi done(điểm) khi xong mục */
+function seq(box,ctx,items,draw){let i=0,score=0;const max=items.length*ctx.pts;
+ const step=()=>{if(!alive(box))return;if(i>=items.length)return ctx.finish(Math.round(score*10)/10,max);const idx=i;
+  box.innerHTML=SHELL(score,`<span class="muted">Câu ${idx+1}/${items.length}</span>`)+`<div class="q-area"></div><div class="gfb efb hint"></div><div class="row nx" style="justify-content:center;margin-top:8px"></div>`;
+  draw(items[idx],box.querySelector(".q-area"),(g,wait)=>{score+=g;setSc(box,score);i++;setTimeout(step,wait||1500)})};
+ step();return{add(g){score+=g}}}
+const itemTxt=x=>x.q||"";
 
-/* ===== GAME 6 – SCIENCE QUIZ ===== */
-GAMES.quiz=function(box,ctx){const pts=ctx.pts,n=num(ctx.cfg.n,8,5,10),tm=num(ctx.cfg.time,0,0,120),W=ctx.all.length>=2?ctx.all:DATA.words;
+/* ===== GAME 5 – FILL IN THE BLANKS (câu mẫu + dòng Fill trong Excel) ===== */
+GAMES.fill=function(box,ctx){const pts=ctx.pts,mode=ctx.cfg.mode||"bank",lid=ctx.lesson.id,n=num(ctx.cfg.n,6,1,15);
+ const custom=its(lid,"fill").map(x=>{const m=/^([\s\S]*?)_{2,}([\s\S]*)$/.exec(x.q||"");const ans=x.a&&x.a.fill;return m&&ans?{cz:{pre:m[1],post:m[2],ans,word:null},x,opts:x.opts&&x.opts.length>=2?x.opts:null,vi:""}:null}).filter(Boolean);
+ let sen=ls(lid).map(s=>({cz:cloze(s.en,ctx.all),vi:s.vi})).filter(x=>x.cz);
+ if(custom.length+sen.length<n)ctx.words.filter(w=>w.ex).forEach(w=>{const cz=cloze(w.ex,[w]);if(cz&&!sen.some(x=>x.cz.pre+x.cz.ans+x.cz.post===w.ex))sen.push({cz,vi:w.vi})});
+ const items=[...shuffle(custom),...shuffle(sen)].slice(0,n);
+ if(!items.length)return empt(box,"Bài này chưa có câu mẫu hoặc câu Fill để chơi.");
+ seq(box,ctx,items,(it,area,done)=>{const cz=it.cz;let att=0;
+  const pool=ctx.all.map(w=>w.en).filter(e=>!cmp(e,cz.ans)),more=DATA.words.map(w=>w.en).filter(e=>!cmp(e,cz.ans)&&!pool.includes(e));
+  const opts=it.opts?shuffle(it.opts.some(o=>cmp(o,cz.ans))?it.opts:[cz.ans,...it.opts]):shuffle([cz.ans,...pick([...new Set([...pool,...shuffle(more)])],5)]);
+  area.innerHTML=`<div class="gq"><div class="exs big">${esc(cz.pre)}<span class="exbl" id="fbl">＿＿＿＿＿</span>${esc(cz.post)}</div>${it.vi?`<div class="muted" style="text-align:center">${esc(it.vi)}</div>`:""}${mode==="type"&&!it.opts?`<div class="row" style="justify-content:center;margin-top:10px"><input id="fti" class="gtxt" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Nhập từ…"><button class="btn" id="fok">Kiểm tra</button></div>`:`<div class="row" style="justify-content:center;margin-top:10px">${opts.map(o=>`<button class="chip fopt" draggable="true" data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div>`}</div>`;
+  const fb=h=>fbox(box,h.h,h.c),bl=area.querySelector("#fbl"),lock=()=>area.querySelectorAll(".fopt,#fok,#fti").forEach(e=>e.disabled=true);
+  function submit(v){if(!v)return;att++;
+   if(cmp(v,cz.ans)){const g=att===1?pts:att===2?pts*.5:pts*.25;bl.textContent=cz.ans;bl.classList.add("ok");fb({h:`🎉 Chính xác!${cz.word&&cz.word.vi?` “${esc(cz.ans)}” nghĩa là “${esc(cz.word.vi)}”.`:""}${it.x&&it.x.expl?`<br>${esc(it.x.expl)}`:""}`,c:"good"});lock();if(cz.word)mark(ctx.lesson.id,cz.word.id);done(g,1500)}
+   else if(att>=3){bl.textContent=cz.ans;bl.classList.add("rev");fb({h:it.x?hintC(3,it.x,cz.ans):hintHTML(3,cz.ans,cz.word),c:"hint"});lock();done(0,2600)}
+   else{bl.textContent=v;bl.classList.add("no");setTimeout(()=>{if(alive(box)){bl.textContent="＿＿＿＿＿";bl.classList.remove("no")}},700);fb({h:KIND[att-1]+"<br>"+(it.x?hintC(att,it.x,cz.ans):hintHTML(att,cz.ans,cz.word)),c:"hint"})}}
+  if(area.querySelector("#fti")){const inp=area.querySelector("#fti");inp.onkeydown=e=>{if(e.key==="Enter")submit(inp.value.trim())};area.querySelector("#fok").onclick=()=>{submit(inp.value.trim());inp.value=""};setTimeout(()=>{try{inp.focus()}catch(e){}},50)}
+  else{area.onclick=e=>{const b=e.target.closest(".fopt");if(b&&!b.disabled)submit(b.dataset.o)};area.ondragstart=e=>{const b=e.target.closest(".fopt");if(b)e.dataTransfer.setData("text/plain",b.dataset.o)};area.ondragover=e=>{if(e.target.closest("#fbl"))e.preventDefault()};area.ondrop=e=>{if(e.target.closest("#fbl")){e.preventDefault();submit(e.dataTransfer.getData("text/plain"))}}}})};
+
+/* ===== GAME 6 – QUIZ (5 câu trắc nghiệm từ Excel + câu tự sinh từ từ khóa) ===== */
+GAMES.quiz=function(box,ctx){const pts=ctx.pts,n=num(ctx.cfg.n,5,1,15),tm=num(ctx.cfg.time,0,0,120),lid=ctx.lesson.id,W=ctx.all.length>=2?ctx.all:DATA.words;
  const others=(w,f)=>{const pool=[...new Set(W.filter(x=>x.id!==w.id).map(f).filter(Boolean))],more=[...new Set(DATA.words.filter(x=>x.id!==w.id).map(f).filter(Boolean))];return pick([...new Set([...pool,...shuffle(more)])],3)};
- const qs=[];
- String((ctx.cfg.qs||"")+"\n"+(DATA.quiz[ctx.lesson.id]||"")).split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const p=l.split("|").map(x=>x.trim()).filter(Boolean);if(p.length>=3)qs.push({q:p[0],img:"",ans:p[1],opts:shuffle(p.slice(1)),ex:""})});
- ctx.words.forEach(w=>{const t=[];
+ const custom=its(lid,"quiz").filter(x=>x.opts&&x.opts.length>=2&&x.a&&x.a.quiz).map(x=>({q:x.q,img:x.img||"",ans:x.a.quiz,opts:shuffle(x.opts),expl:x.expl,hint:x.hint}));
+ String((ctx.cfg.qs||"")+"\n"+(DATA.quiz[lid]||"")).split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const p=l.split("|").map(x=>x.trim()).filter(Boolean);if(p.length>=3)custom.push({q:p[0],img:"",ans:p[1],opts:shuffle(p.slice(1))})});
+ let list=shuffle(custom).slice(0,n);
+ if(list.length<n){const auto=[];ctx.words.forEach(w=>{const t=[];
   if(w.img)t.push({q:"What is this? (Đây là gì?)",img:w.img,ans:w.en,opts:shuffle([w.en,...others(w,x=>x.en)]),w});
   t.push({q:`“${w.vi}” trong tiếng Anh là gì?`,ans:w.en,opts:shuffle([w.en,...others(w,x=>x.en)]),w});
   t.push({q:`“${w.en}” nghĩa là gì?`,ans:w.vi,opts:shuffle([w.vi,...others(w,x=>x.vi)]),w});
-  if(w.def)t.push({q:`Which word? “${w.def}”`,ans:w.en,opts:shuffle([w.en,...others(w,x=>x.en)]),w});
-  qs.push(t[rnd(t.length)])});
- const list=pick(qs,Math.min(n,qs.length)).filter(q=>q.opts.length>=2);
- if(!list.length){box.innerHTML=`<div class="empty">Chưa đủ nội dung để tạo câu hỏi.</div>`;return}
- let i=0,score=0,timer=null;
- function round(){if(!alive(box))return;clearInterval(timer);if(i>=list.length)return ctx.finish(score,list.length*pts);
-  const q=list[i];let answered=false,left=tm;
-  box.innerHTML=SHELL(score,`<span class="muted">Câu ${i+1}/${list.length}</span>${tm?`<span id="qtm" class="muted">⏱ ${tm}s</span>`:""}`)+`<div class="gq">${q.img?`<img class="gimg" src="${q.img}" alt="">`:""}<div class="qq">${esc(q.q)}</div><div class="qopts">${q.opts.map(o=>`<button class="qo" data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div></div><div class="gfb efb hint">Chọn một đáp án.</div><div id="qnx" class="row" style="justify-content:center;margin-top:8px"></div>`;
-  const nx=()=>{box.querySelector("#qnx").innerHTML=`<button class="btn" id="qn">${i+1>=list.length?"🏁 Xem kết quả":"Câu tiếp ▶"}</button>`;box.querySelector("#qn").onclick=()=>{i++;round()}};
+  if(w.def)t.push({q:`Which word? “${w.def}”`,ans:w.en,opts:shuffle([w.en,...others(w,x=>x.en)]),w});auto.push(t[rnd(t.length)])});
+  list=list.concat(pick(auto.filter(q=>q.opts.length>=2),n-list.length))}
+ if(!list.length)return empt(box,"Bài này chưa có câu hỏi trắc nghiệm.");
+ let timer=null;
+ seq(box,ctx,list,(q,area,done)=>{let answered=false,left=tm;clearInterval(timer);
+  area.innerHTML=`${tm?`<div id="qtm" class="muted" style="text-align:right">⏱ ${tm}s</div>`:""}<div class="gq">${q.img?`<img class="gimg" src="${q.img}" alt="">`:""}<div class="qq">${esc(q.q)}</div><div class="qopts">${q.opts.map(o=>`<button class="qo" data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div></div>`;
+  const nx=g=>{const r=box.querySelector(".nx");r.innerHTML=`<button class="btn" id="qn">Câu tiếp ▶</button>`;r.querySelector("#qn").onclick=()=>done(g,1)};
   function answer(o){if(answered)return;answered=true;clearInterval(timer);const good=o!==null&&cmp(o,q.ans);
-   box.querySelectorAll(".qo").forEach(b=>{b.disabled=true;if(cmp(b.dataset.o,q.ans))b.classList.add("ok");else if(o!==null&&b.dataset.o===o)b.classList.add("no")});
-   if(good){score+=pts;setSc(box,score);fbox(box,"🎉 Chính xác!","good")}
-   else fbox(box,(o===null?"⏰ Hết giờ rồi! ":"Chưa đúng, không sao nhé! ")+`Đáp án: <b>${esc(q.ans)}</b>.`+(q.w&&q.w.ex?`<br><i>${hl(q.w.ex,[q.w])}</i>`:""),"hint");
-   if(q.w)speakWord(q.w);nx()}
-  box.querySelectorAll(".qo").forEach(b=>b.onclick=()=>answer(b.dataset.o));
-  if(tm)timer=setInterval(()=>{if(!alive(box))return clearInterval(timer);left--;const e=box.querySelector("#qtm");if(e)e.textContent="⏱ "+Math.max(0,left)+"s";if(left<=0)answer(null)},1000)}
- round()};
+   area.querySelectorAll(".qo").forEach(b=>{b.disabled=true;if(cmp(b.dataset.o,q.ans))b.classList.add("ok");else if(o!==null&&b.dataset.o===o)b.classList.add("no")});
+   fbox(box,good?`🎉 Chính xác!${q.expl?`<br>${esc(q.expl)}`:""}`:(o===null?"⏰ Hết giờ rồi! ":"Chưa đúng, không sao nhé! ")+`Đáp án: <b>${esc(q.ans)}</b>.${q.expl?`<br>${esc(q.expl)}`:q.w&&q.w.ex?`<br><i>${hl(q.w.ex,[q.w])}</i>`:""}`,good?"good":"hint");
+   if(q.w)speakWord(q.w);nx(good?pts:0)}
+  area.querySelectorAll(".qo").forEach(b=>b.onclick=()=>answer(b.dataset.o));
+  if(tm)timer=setInterval(()=>{if(!alive(box))return clearInterval(timer);left--;const e=box.querySelector("#qtm");if(e)e.textContent="⏱ "+Math.max(0,left)+"s";if(left<=0)answer(null)},1000)})};
 
-/* ===== GAME 7 – SENTENCE ORDER (sắp xếp từ thành câu) ===== */
-GAMES.order=function(box,ctx){const pts=ctx.pts;
- let items=ls(ctx.lesson.id).map(s=>({en:s.en.trim(),vi:s.vi,w:null}));
- if(items.length<3)ctx.words.filter(w=>w.ex).forEach(w=>{if(!items.some(x=>x.en===w.ex.trim()))items.push({en:w.ex.trim(),vi:w.vi,w})});
- items=pick(items.filter(x=>x.en.split(/\s+/).length>=3),num(ctx.cfg.n,5,1,12));
- if(!items.length){box.innerHTML=`<div class="empty">Bài này chưa có mẫu câu (từ 3 từ trở lên) để chơi sắp xếp.</div>`;return}
- let i=0,score=0;
- function round(){if(!alive(box))return;if(i>=items.length)return ctx.finish(score,items.length*pts);
-  const it=items[i],toks=it.en.split(/\s+/);let order=shuffle(toks.map((_,k)=>k)),tries=0;
+/* ===== GAME 7 – SENTENCE ORDER (sắp xếp từ / cụm từ thành câu) ===== */
+GAMES.order=function(box,ctx){const lid=ctx.lesson.id;
+ let items=ls(lid).map(s=>({en:s.en.trim(),vi:s.vi,chunks:s.chunks&&s.chunks.length>1?s.chunks:null}));
+ its(lid,"scramble").forEach(x=>{if(x.sentence)items.push({en:x.sentence.trim(),vi:x.hint||"",chunks:x.chunks&&x.chunks.length>1?x.chunks:null,expl:x.expl})});
+ if(items.length<3)ctx.words.filter(w=>w.ex).forEach(w=>{if(!items.some(x=>x.en===w.ex.trim()))items.push({en:w.ex.trim(),vi:w.vi,chunks:null})});
+ items=pick(items.filter(x=>(x.chunks||x.en.split(/\s+/)).length>=3),num(ctx.cfg.n,5,1,12));
+ if(!items.length)return empt(box,"Bài này chưa có mẫu câu (từ 3 từ/cụm trở lên) để chơi sắp xếp.");
+ seq(box,ctx,items,(it,area,done)=>{const toks=it.chunks||it.en.split(/\s+/),exp=toks.join(" ");let order=shuffle(toks.map((_,k)=>k)),tries=0,placed=[],locked=0,fin=false;
   for(let t=0;t<20&&order.every((v,k)=>v===k);t++)order=shuffle(order);
-  let placed=[],locked=0;const done={v:false};
-  const draw2=()=>{box.querySelector("#oln").innerHTML=placed.length?placed.map((k,n)=>`<button class="chip ${n<locked?"used":"sel"}" data-n="${n}">${esc(toks[k])}</button>`).join(""):`<span class="muted">Chạm vào các từ bên dưới theo đúng thứ tự…</span>`;
-   box.querySelector("#obk").innerHTML=order.filter(k=>!placed.includes(k)).map(k=>`<button class="chip" data-k="${k}">${esc(toks[k])}</button>`).join("")};
-  box.innerHTML=SHELL(score,`<span class="muted">Câu ${i+1}/${items.length}</span>`)+`<div class="gq"><div class="gclue" style="font-size:18px">🇻🇳 ${esc(it.vi||"Sắp xếp các từ thành câu đúng")}</div><div class="oln" id="oln"></div><div class="row" style="justify-content:center;margin-top:10px" id="obk"></div>
-   <div class="row" style="justify-content:center;margin-top:12px"><button class="btn" id="ock">✔ Kiểm tra</button><button class="btn sec" id="orst">↺ Làm lại câu này</button></div></div><div class="gfb efb hint">Chạm từ để đưa lên dòng trên; chạm lại để gỡ xuống.</div>`;
-  draw2();
-  box.onclick=e=>{if(done.v)return;const b=e.target.closest(".chip");if(!b)return;
-   if(b.dataset.k!=null){placed.push(+b.dataset.k);draw2()}
-   else if(b.dataset.n!=null){const n=+b.dataset.n;if(n<locked)return;placed.splice(n,1);draw2()}};
-  box.querySelector("#orst").onclick=()=>{if(done.v)return;placed=placed.slice(0,locked);draw2()};
-  box.querySelector("#ock").onclick=()=>{if(done.v)return;if(placed.length<toks.length)return fbox(box,"Con hãy đặt đủ tất cả các từ nhé 🌱","hint");
-   const got=placed.map(k=>toks[k]).join(" ");tries++;
-   if(cmp(got,it.en)){done.v=true;const g=tries===1?pts:tries===2?pts*.5:pts*.25;score+=g;setSc(box,score);fbox(box,`🎉 Chính xác! ${esc(it.en)}`,"good");say(it.en);i++;setTimeout(round,1800)}
-   else if(tries>=3){done.v=true;placed=toks.map((_,k)=>k);locked=toks.length;draw2();fbox(box,`📖 Câu đúng là: <b>${esc(it.en)}</b><br>Không sao đâu, con chơi lại để nhớ thêm nhé!`,"hint");i++;setTimeout(round,3000)}
-   else{const n=tries===1?1:2;locked=0;placed=[];for(let k=0;k<n;k++)placed.push(k);locked=n;draw2();fbox(box,KIND[tries-1]+`<br>💡 Gợi ý ${tries}: câu bắt đầu bằng “<b>${esc(toks.slice(0,n).join(" "))}</b>”. Mình đã đặt sẵn giúp con.`,"hint")}}}
- round()};
+  area.innerHTML=`<div class="gq"><div class="gclue" style="font-size:18px">🇻🇳 ${esc(it.vi||"Sắp xếp các từ/cụm từ thành câu đúng")}</div><div class="oln" id="oln"></div><div class="row" style="justify-content:center;margin-top:10px" id="obk"></div><div class="row" style="justify-content:center;margin-top:12px"><button class="btn" id="ock">✔ Kiểm tra</button><button class="btn sec" id="orst">↺ Làm lại câu này</button></div></div>`;
+  const draw2=()=>{area.querySelector("#oln").innerHTML=placed.length?placed.map((k,n)=>`<button class="chip ${n<locked?"used":"sel"}" data-n="${n}">${esc(toks[k])}</button>`).join(""):`<span class="muted">Chạm vào các từ bên dưới theo đúng thứ tự…</span>`;area.querySelector("#obk").innerHTML=order.filter(k=>!placed.includes(k)).map(k=>`<button class="chip" data-k="${k}">${esc(toks[k])}</button>`).join("")};draw2();
+  area.onclick=e=>{if(fin)return;const b=e.target.closest(".chip");if(!b)return;if(b.dataset.k!=null){placed.push(+b.dataset.k);draw2()}else if(b.dataset.n!=null){const n=+b.dataset.n;if(n<locked)return;placed.splice(n,1);draw2()}};
+  area.querySelector("#orst").onclick=()=>{if(!fin){placed=placed.slice(0,locked);draw2()}};
+  area.querySelector("#ock").onclick=()=>{if(fin)return;if(placed.length<toks.length)return fbox(box,"Con hãy đặt đủ tất cả các từ/cụm từ nhé 🌱","hint");tries++;
+   if(cmp(placed.map(k=>toks[k]).join(" "),exp)){fin=true;fbox(box,`🎉 Chính xác! ${esc(it.en)}${it.expl?`<br>${esc(it.expl)}`:""}`,"good");say(it.en);done(tries===1?ctx.pts:tries===2?ctx.pts*.5:ctx.pts*.25,1800)}
+   else if(tries>=3){fin=true;placed=toks.map((_,k)=>k);locked=toks.length;draw2();fbox(box,`📖 Câu đúng là: <b>${esc(exp)}</b><br>Không sao đâu, con chơi lại để nhớ thêm nhé!`,"hint");done(0,3000)}
+   else{const n=tries===1?1:2;placed=[];for(let k=0;k<n;k++)placed.push(k);locked=n;draw2();fbox(box,KIND[tries-1]+`<br>💡 Gợi ý ${tries}: câu bắt đầu bằng “<b>${esc(toks.slice(0,n).join(" "))}</b>”. Mình đã đặt sẵn giúp con.`,"hint")}}})};
+
+/* ===== GAME 8 – ODD ONE OUT ===== */
+GAMES.odd=function(box,ctx){const items=pick(its(ctx.lesson.id,"odd").filter(x=>x.odd&&x.odd.length>=3&&x.a&&x.a.odd),num(ctx.cfg.n,5,1,12));
+ if(!items.length)return empt(box,"Bài này chưa có câu Odd One Out (dòng OddOneOut trong Excel).");
+ seq(box,ctx,items,(x,area,done)=>{let att=0,off=new Set(),fin=false;const opts=shuffle(x.odd);
+  area.innerHTML=`<div class="gq"><div class="qq">${esc(x.q||"Find the odd one out.")}</div><div class="qopts">${opts.map(o=>`<button class="qo" data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div></div>`;
+  area.onclick=e=>{const b=e.target.closest(".qo");if(!b||b.disabled||fin)return;const o=b.dataset.o;att++;
+   if(cmp(o,x.a.odd)){fin=true;b.classList.add("ok");area.querySelectorAll(".qo").forEach(z=>z.disabled=true);fbox(box,`🎉 Chính xác! “${esc(o)}” là từ khác loại.${x.expl?`<br>${esc(x.expl)}`:""}`,"good");done(att===1?ctx.pts:att===2?ctx.pts*.5:ctx.pts*.25,1800)}
+   else{b.classList.add("no");b.disabled=true;if(att>=3){fin=true;area.querySelectorAll(".qo").forEach(z=>{z.disabled=true;if(cmp(z.dataset.o,x.a.odd))z.classList.add("ok")});fbox(box,hintC(3,x,x.a.odd),"hint");done(0,2800)}else fbox(box,KIND[att-1]+"<br>"+hintC(att,x,x.a.odd),"hint")}}})};
+
+/* ===== GAME 9 – TRUE OR FALSE ===== */
+GAMES.tf=function(box,ctx){const items=pick(its(ctx.lesson.id,"tf").filter(x=>x.q&&typeof(x.a&&x.a.tf)==="boolean"),num(ctx.cfg.n,5,1,15));
+ if(!items.length)return empt(box,"Bài này chưa có câu True/False (dòng TrueFalse trong Excel).");
+ seq(box,ctx,items,(x,area,done)=>{let fin=false;
+  area.innerHTML=`<div class="gq"><div class="qq">${esc(x.q)}</div><div class="qopts" style="max-width:420px"><button class="qo" data-v="1">✔ TRUE – Đúng</button><button class="qo" data-v="0">✖ FALSE – Sai</button></div></div>`;
+  area.onclick=e=>{const b=e.target.closest(".qo");if(!b||fin)return;fin=true;const v=b.dataset.v==="1",good=v===x.a.tf;
+   area.querySelectorAll(".qo").forEach(z=>{z.disabled=true;if((z.dataset.v==="1")===x.a.tf)z.classList.add("ok");else if(z===b)z.classList.add("no")});
+   fbox(box,good?`🎉 Chính xác!${x.expl?`<br>${esc(x.expl)}`:""}`:`Chưa đúng, không sao nhé! Nhận định này là <b>${x.a.tf?"ĐÚNG":"SAI"}</b>.${x.hint?`<br>💡 ${esc(x.hint)}`:""}${x.expl?`<br>${esc(x.expl)}`:""}`,good?"good":"hint");done(good?ctx.pts:0,2200)}})};
+
+/* ===== GAME 10 – FIX THE MISTAKE ===== */
+GAMES.fix=function(box,ctx){const items=pick(its(ctx.lesson.id,"fix").filter(x=>x.q&&x.a&&x.a.fix),num(ctx.cfg.n,5,1,12));
+ if(!items.length)return empt(box,"Bài này chưa có câu Fix the Mistake (dòng FixMistake trong Excel).");
+ seq(box,ctx,items,(x,area,done)=>{let att=0,fin=false;const wrong=String(x.q).replace(/^\s*find and correct the mistake\s*[:：-]?\s*/i,"").trim();
+  area.innerHTML=`<div class="gq"><div class="muted">Tìm lỗi và viết lại câu đúng:</div><div class="gclue" style="font-size:19px;color:#b91c1c">${esc(wrong)}</div><textarea id="fxt" class="gtxt" style="width:100%;max-width:560px;min-height:70px" autocomplete="off" autocapitalize="off" spellcheck="false">${esc(wrong)}</textarea><div class="row" style="justify-content:center;margin-top:8px"><button class="btn" id="fxk">✔ Kiểm tra</button></div></div>`;
+  const inp=area.querySelector("#fxt");
+  area.querySelector("#fxk").onclick=()=>{if(fin)return;const v=inp.value;if(!v.trim())return;att++;
+   if(nz(v)===nz(x.a.fix)){fin=true;fbox(box,`🎉 Chính xác! ${esc(x.a.fix)}${x.expl?`<br>${esc(x.expl)}`:""}`,"good");say(x.a.fix);done(att===1?ctx.pts:att===2?ctx.pts*.5:ctx.pts*.25,1800)}
+   else if(att>=3){fin=true;inp.value=x.a.fix;fbox(box,hintC(3,x,x.a.fix),"hint");done(0,3000)}
+   else fbox(box,KIND[att-1]+"<br>"+(att===1?hintC(1,x,x.a.fix):`💡 Gợi ý 2: câu đúng bắt đầu bằng “<b>${esc(x.a.fix.split(/\s+/).slice(0,3).join(" "))}</b>…”.`),"hint")}})};
+
+/* ===== GAME 11 – MATCH PAIRS (ghép vế trái – vế phải) ===== */
+GAMES.pairs=function(box,ctx){const list=pick(prs(ctx.lesson.id).filter(p=>p.l&&p.r),num(ctx.cfg.n,6,2,10)),pts=ctx.pts;
+ if(list.length<2)return empt(box,"Bài này chưa có cặp ghép (trang MatchPairs trong Excel, cần ít nhất 2 cặp).");
+ let sel=null,left=list.length,score=0;const wrong={},done={};
+ box.innerHTML=SHELL(0,`<span class="muted">Chạm một vế bên trái, rồi chạm vế phải tương ứng.</span>`)+`<div class="pgrid"><div class="pcol">${shuffle(list.map((p,k)=>k)).map(k=>`<button class="pc pl" data-k="${k}">${esc(list[k].l)}</button>`).join("")}</div><div class="pcol">${shuffle(list.map((p,k)=>k)).map(k=>`<button class="pc pr" data-k="${k}">${esc(list[k].r)}</button>`).join("")}</div></div><div class="gfb efb hint">Chọn một vế bên trái trước nhé 👈</div>`;
+ const L=k=>box.querySelector(`.pl[data-k="${k}"]`),R=k=>box.querySelector(`.pr[data-k="${k}"]`);
+ box.onclick=e=>{const l=e.target.closest(".pl"),r=e.target.closest(".pr");
+  if(l&&!l.disabled){box.querySelectorAll(".pl.sel").forEach(z=>z.classList.remove("sel"));sel=l.dataset.k;l.classList.add("sel");fbox(box,"Giờ chạm vế bên phải tương ứng 👉","hint");return}
+  if(r&&!r.disabled){if(sel==null)return fbox(box,"Hãy chọn một vế bên trái trước nhé 👈","hint");const k=sel;
+   if(r.dataset.k===k){done[k]=1;score+=wrong[k]?pts/2:pts;left--;[L(k),r].forEach(z=>{z.classList.remove("sel");z.classList.add("ok");z.disabled=true});sel=null;setSc(box,score);fbox(box,`🎉 Đúng cặp! ${esc(list[k].l)} → ${esc(list[k].r)}`,"good")}
+   else{wrong[k]=(wrong[k]||0)+1;r.classList.add("shake");setTimeout(()=>r.classList.remove("shake"),450);const n=wrong[k];
+    if(n>=3){done[k]=1;left--;[L(k),R(k)].forEach(z=>{z.classList.remove("sel");z.classList.add("rev");z.disabled=true});sel=null;fbox(box,`📖 ${esc(list[k].l)} → <b>${esc(list[k].r)}</b><br>Không sao đâu, con chơi lại để nhớ thêm nhé!`,"hint")}
+    else fbox(box,KIND[n-1]+"<br>"+(n===1?(list[k].hint?`💡 ${esc(list[k].hint)}`:`💡 Hãy đọc kỹ vế trái “${esc(list[k].l)}” nhé.`):`💡 Vế phải bắt đầu bằng “<b>${esc(list[k].r.slice(0,4))}</b>…”.`),"hint")}
+   if(left<=0)setTimeout(()=>alive(box)&&ctx.finish(Math.round(score*10)/10,list.length*pts),700)}};
+};
 
 /* =====================================================================
    KHU QUẢN TRỊ ESL (ESL CONTENT MANAGER) – chỉ giáo viên thấy
    ===================================================================== */
 const AS={g:null,lesson:null,tab:"v",all:false,rep:"student",repClass:"",repQ:"",repTest:false};
 E.AS=AS;
-const ATABS=[["i","📥 Nhập nhanh"],["v","📚 Từ khóa"],["s","💬 Mẫu câu"],["g","🎮 Trò chơi"],["l","🎧 Nghe & điền từ"],["p","👁 Xem trước"],["r","📊 Báo cáo"],["d","💾 Dữ liệu"]];
+const ATABS=[["i","📥 Nhập nhanh"],["v","📚 Từ khóa"],["s","💬 Mẫu câu"],["l","🎧 Nghe & điền từ"],["g","🎮 Trò chơi"],["x","🧩 Câu hỏi & game"],["p","👁 Xem trước"],["r","📊 Báo cáo"],["d","💾 Dữ liệu"]];
 const lessonOpts=()=>chaptersOf(AS.g).map(c=>`<optgroup label="${esc(c.name)}">${c.lessons.map(l=>`<option value="${l.id}" ${l.id===AS.lesson?"selected":""}>Bài ${l.no}. ${esc(l.name)} (${lw(l.id).filter(w=>!w.rev).length} từ)</option>`).join("")}</optgroup>`).join("");
 E.admin=function(){E.preview=false;
  if(!loaded){G("main").innerHTML=`<div class="card"><div class="empty">⏳ Đang tải dữ liệu ESL…</div></div>`;E.ready.then(()=>{if(V.name==="adm"&&V.adm==="esl")E.admin()});return}
  if(!AS.g)AS.g=V.g||GR[0][0];
  if(AS.lesson&&!findLesson(AS.lesson))AS.lesson=null;
- const tabNeedsLesson=["v","s","g","l","p"].includes(AS.tab),showSel=tabNeedsLesson||AS.tab==="i",l=AS.lesson?findLesson(AS.lesson):null;
+ const tabNeedsLesson=["v","s","g","l","p","x"].includes(AS.tab),showSel=tabNeedsLesson||AS.tab==="i",l=AS.lesson?findLesson(AS.lesson):null;
  const dirty=Number(localStorage.getItem(KEY_EDIT)||0)>Number(localStorage.getItem(KEY_PUB)||0)&&(DATA.words.length||DATA.sents.length);
  G("main").innerHTML=`<div class="card esl"><h2>🔤 SCIENCE ESL – Quản lý nội dung</h2>${dirty?`<div class="efb hint" style="margin-bottom:8px">⚠ Nội dung ESL có thay đổi CHƯA xuất bản. Vào tab <b>💾 Dữ liệu</b> → “Tải esl-data.json” rồi tải lên GitHub cùng thư mục với index.html.</div>`:""}
  <div class="row" style="margin-bottom:10px">${gradeSeg(AS.g,"ESL.pickGrade")}${showSel?`<select id="esLs" onchange="ESL.pickLesson(this.value)" style="min-width:230px;max-width:100%"><option value="">— Chọn bài học —</option>${lessonOpts()}</select>`:""}</div>
  <div class="tabs" style="margin-bottom:10px">${ATABS.map(([k,n])=>`<button class="${AS.tab===k?"on":""}" onclick="ESL.admTab('${k}')">${n}</button>`).join("")}</div>
- <div id="eadm">${tabNeedsLesson&&!l?`<div class="empty">Hãy chọn lớp và bài học ở trên để soạn nội dung ESL.</div>`:AS.tab==="i"?importAdm(l):AS.tab==="v"?vocabAdm(l):AS.tab==="s"?sentAdm(l):AS.tab==="g"?gameAdm(l):AS.tab==="l"?listenAdm(l):AS.tab==="p"?`<div id="eslpv"></div>`:AS.tab==="r"?reportAdm():dataAdm()}</div></div>`;
+ <div id="eadm">${tabNeedsLesson&&!l?`<div class="empty">Hãy chọn lớp và bài học ở trên để soạn nội dung ESL.</div>`:AS.tab==="i"?importAdm(l):AS.tab==="x"?itemsAdm(l):AS.tab==="v"?vocabAdm(l):AS.tab==="s"?sentAdm(l):AS.tab==="g"?gameAdm(l):AS.tab==="l"?listenAdm(l):AS.tab==="p"?`<div id="eslpv"></div>`:AS.tab==="r"?reportAdm():dataAdm()}</div></div>`;
  if(AS.tab==="p"&&l){E.lesson(l,G("eslpv"),true)}
  if(AS.tab==="l"&&l)lsBindTokens()};
 E.pickGrade=g=>{AS.g=g;AS.lesson=null;E.admin()};
@@ -530,32 +600,41 @@ E.sBulk=()=>modal(`<h3>📝 Thêm nhiều câu</h3><p class="muted">Mỗi dòng 
 E.sBulkSave=()=>{let n=0;G("sbk").value.split(/\r?\n/).forEach(l=>{const p=l.split(/\s*\|\s*|\t/);if(p[0]&&p[0].trim()){DATA.sents.push({id:uid("s"),lesson:AS.lesson,en:p[0].trim(),vi:(p[1]||"").trim(),audio:""});n++}});save();closeModal();toast(`✅ Đã thêm ${n} câu`);reload()};
 
 /* ---------- 3. Game Manager ---------- */
-const GF={order:["n","pts","plays"],match:["n","pts","plays"],guess:["n","pts","bonus","tries","plays"],search:["n","pts","time","plays"],flip:["n","pts","mode","plays"],fill:["n","pts","mode","plays"],quiz:["n","pts","time","plays","qs"]};
+const GF={odd:["n","pts","plays"],tf:["n","pts","plays"],fix:["n","pts","plays"],pairs:["n","pts","plays"],order:["n","pts","plays"],match:["n","pts","plays"],guess:["n","pts","bonus","tries","plays"],search:["n","pts","time","plays"],flip:["n","pts","mode","plays"],fill:["n","pts","mode","plays"],quiz:["n","pts","time","plays","qs"]};
 const GL={n:["Số câu / cặp / từ",1,15],pts:["Điểm mỗi câu",1,100],bonus:["Điểm thưởng (đúng lần 1)",0,50],tries:["Số lần đoán",1,6],plays:["Số lượt chơi tối đa (0 = không giới hạn)",0,99],time:["Thời gian (giây, 0 = không tính giờ)",0,3600]};
 function gameAdm(l){const ws=lw(l.id),nq=(DATA.quiz[l.id]||"").split(/\r?\n/).filter(x=>x.trim()).length,cur=gamesOf(l.id),auto=cur.length&&cur[0].auto,byT=Object.fromEntries(cur.map(g=>[g.type,g]));
  return `<p class="muted">Chọn khoảng 3 trò chơi cho bài ${l.no}. ${auto?"<b>Đang dùng bộ game mặc định</b> – bấm Lưu để cố định lựa chọn của thầy/cô.":""} Game dùng chung thư viện, không cần viết lại code.${nq?` Bài này có <b>${nq}</b> câu quiz nhập từ Excel (tự dùng trong Science Quiz).`:""}</p>
- ${GORDER.map(t=>{const d=GAMEDEF[t],g=byT[t],cfg=Object.assign({},gcfgDefault(t),g?g.cfg:{});
+ ${GPLAY.map(t=>{const d=GAMEDEF[t],g=byT[t],cfg=Object.assign({},gcfgDefault(t),g?g.cfg:{});
   return `<details class="gadm" ${g?"open":""}><summary><label><input type="checkbox" id="g_${t}_on" ${g?"checked":""} onclick="event.stopPropagation()"> ${d.icon} <b>${d.name}</b> – ${d.vn}</label></summary><div class="gfl">
   ${GF[t].map(f=>f==="mode"?`<div class="fg"><label>Kiểu thẻ</label><select id="g_${t}_mode">${(t==="flip"?[["vi","English – Tiếng Việt"],["img","English – Hình"],["def","English – Mô tả"],["mix","Trộn các kiểu"]]:[["bank","Chọn / kéo từ trong ngân hàng từ"],["type","Nhập trực tiếp từ"]]).map(([v,n])=>`<option value="${v}" ${cfg.mode===v?"selected":""}>${n}</option>`).join("")}</select></div>`:f==="qs"?`<div class="fg" style="grid-column:1/-1"><label>Câu hỏi tự soạn (không bắt buộc) – mỗi dòng: <code>Câu hỏi | đáp án ĐÚNG | sai 1 | sai 2 | sai 3</code></label><textarea id="g_${t}_qs" style="width:100%;min-height:80px">${esc(cfg.qs||"")}</textarea></div>`:`<div class="fg"><label>${GL[f][0]}</label><input type="number" id="g_${t}_${f}" value="${cfg[f]}" min="${GL[f][1]}" max="${GL[f][2]}"></div>`).join("")}
   <div class="fg" style="grid-column:1/-1"><label>Từ khóa dùng trong game <span class="muted">(bỏ chọn hết = dùng tất cả từ của bài)</span></label><div class="row">${ws.map(w=>`<label class="chip"><input type="checkbox" name="g_${t}_w" value="${w.id}" ${cfg.words&&cfg.words.includes(w.id)?"checked":""}> ${esc(w.en)}</label>`).join("")||"<span class='muted'>Bài chưa có từ.</span>"}</div></div></div></details>`}).join("")}
+ <div class="card" style="margin-top:10px"><h4 style="margin:0 0 6px">❓ Tab QUIZ – câu hỏi trắc nghiệm (áp dụng cho mọi bài)</h4><div class="gfl"><div class="fg"><label>Số câu mỗi lượt</label><input type="number" id="q_n" value="${num((DATA.cfg.quiz||{}).n,5,1,15)}" min="1" max="15"></div><div class="fg"><label>Điểm mỗi câu</label><input type="number" id="q_pts" value="${num((DATA.cfg.quiz||{}).pts,10,1,100)}"></div><div class="fg"><label>Giây mỗi câu (0 = không tính giờ)</label><input type="number" id="q_time" value="${num((DATA.cfg.quiz||{}).time,0,0,120)}"></div></div></div>
  <div class="row" style="margin-top:10px"><button class="btn" onclick="ESL.gSave()">💾 Lưu lựa chọn game</button></div>`}
-E.gSave=()=>{const out=[];GORDER.forEach(t=>{if(!G("g_"+t+"_on").checked)return;const cfg={};GF[t].forEach(f=>{const e=G(`g_${t}_${f}`);if(!e)return;cfg[f]=f==="mode"||f==="qs"?e.value:num(e.value,gcfgDefault(t)[f]||0,GL[f]?GL[f][1]:0,GL[f]?GL[f][2]:9999)});
+E.gSave=()=>{const out=[];DATA.cfg.quiz={n:num(G("q_n").value,5,1,15),pts:num(G("q_pts").value,10,1,100),time:num(G("q_time").value,0,0,120)};GPLAY.forEach(t=>{if(!G("g_"+t+"_on").checked)return;const cfg={};GF[t].forEach(f=>{const e=G(`g_${t}_${f}`);if(!e)return;cfg[f]=f==="mode"||f==="qs"?e.value:num(e.value,gcfgDefault(t)[f]||0,GL[f]?GL[f][1]:0,GL[f]?GL[f][2]:9999)});
   cfg.words=[...document.querySelectorAll(`input[name="g_${t}_w"]:checked`)].map(e=>e.value);out.push({type:t,cfg})});
  DATA.games[AS.lesson]=out;save();toast(`✅ Đã lưu ${out.length} trò chơi cho bài này${out.length>4?" (nên chọn khoảng 3)":""}`)};
 
 /* ---------- 4. Listening Manager ---------- */
-function listenAdm(l){const c=DATA.listen[l.id]||{title:"Listen and fill in the blanks",text:"",hide:[],bank:true,hint:true,showAns:false,maxPlays:0,rate:1};TMP={img:"",audio:c.audio||""};LC=JSON.parse(JSON.stringify(Object.assign({hide:[]},c,{audio:undefined})));
+function listenAdm(l){const c=DATA.listen[l.id]||{title:"Listen and fill in the blanks",text:"",hide:[],bank:true,hint:true,showAns:false,maxPlays:0,rate:1};TMP={img:"",audio:c.audio||""};LC=JSON.parse(JSON.stringify(Object.assign({hide:[]},c,{audio:undefined})));LC.clips=LC.clips||{};
  return `<p class="muted">Đoạn văn khoảng 3–5 câu, dùng từ khóa và mẫu câu của bài. Chọn từ cần ẩn bằng cách bấm vào từ.</p>
  ${fld("Tiêu đề hoạt động",`<input type="text" id="lft" style="width:100%" value="${esc(c.title||"")}">`)}${fld("Đoạn văn <button class='btn sm sec' type='button' onclick='ESL.lsFromSents()'>✨ Tạo từ các mẫu câu của bài</button>",`<textarea id="lfx" style="width:100%;min-height:110px" oninput="ESL.lsText()">${esc(c.text||"")}</textarea>`)}
- <div class="fg"><label>Bấm vào từ để ẩn / hiện (từ ẩn = ô trống)</label><div id="lftok" class="lftok"></div><div class="row" style="margin-top:6px"><button class="btn sm blue" onclick="ESL.lsAuto()">✨ Tự ẩn các từ khóa của bài</button><button class="btn sm sec" onclick="ESL.lsClear()">Bỏ ẩn hết</button></div></div>
+ <div class="fg"><label>Bấm vào từ để ẩn / hiện (từ ẩn = ô trống – nên chọn 5 chỗ)</label><div id="lftok" class="lftok"></div><div class="row" style="margin-top:6px"><button class="btn sm blue" onclick="ESL.lsAuto()">✨ Tự ẩn các từ khóa của bài</button><button class="btn sm sec" onclick="ESL.lsClear()">Bỏ ẩn hết</button></div></div>
+ <div class="fg"><label>🎬 Clip cho từng chỗ trống (audio, video hoặc link YouTube/Drive) – học sinh bấm nút số để nghe/xem</label><div id="lfclips"></div><input type="file" id="lfc" accept="audio/*,video/*" class="hidden" onchange="ESL.clipFile(this)"></div>
  <div class="gfl"><div class="fg"><label>Số lần nghe tối đa (0 = không giới hạn)</label><input type="number" id="lfm" value="${c.maxPlays||0}" min="0" max="20"></div><div class="fg"><label>Tốc độ giọng đọc (1 = bình thường)</label><input type="number" id="lfr" step=".1" value="${c.rate||1}" min=".5" max="1.5"></div></div>
  <label style="display:block;margin:6px 0"><input type="checkbox" id="lfb" ${c.bank!==false?"checked":""}> Hiện ngân hàng từ (word bank)</label><label style="display:block;margin:6px 0"><input type="checkbox" id="lfh" ${c.hint!==false?"checked":""}> Cho phép nút gợi ý (Show Hint)</label><label style="display:block;margin:6px 0"><input type="checkbox" id="lfs" ${c.showAns?"checked":""}> Cho phép Show Answer ngay sau lần kiểm tra đầu</label>
  ${fld("Audio của đoạn văn",`<div class="row"><button class="btn sm sec" type="button" onclick="G_('lfa').click()">🎵 Tải audio</button><button class="btn sm red" type="button" onclick="ESL.clrAudio('wal')">✖ Bỏ audio</button><button class="btn sm" type="button" onclick="ESL.lsTest()">🔊 Nghe thử</button><input type="file" id="lfa" accept="audio/*" class="hidden" onchange="ESL.pickAudio(this,'wal')"></div><div id="wal" class="muted" style="font-size:13px">${c.audio?"✅ Đã có audio":"(chưa có – sẽ dùng giọng đọc tự động của thiết bị)"}</div>`)}
  <div class="row"><button class="btn" onclick="ESL.lsSave()">💾 Lưu</button>${DATA.listen[l.id]?`<button class="btn red" onclick="ESL.lsDel()">🗑 Xóa hoạt động</button>`:""}</div>`}
 let LC={hide:[]};
 function lsBindTokens(){const t=G("lftok");if(t)lsTok()}
-function lsTok(){const txt=G("lfx").value,toks=tok(txt);G("lftok").innerHTML=toks.map((t,i)=>ISWx(t)?`<span class="tk ${LC.hide.includes(i)?"hid":""}" onclick="ESL.lsToggle(${i})">${esc(t)}</span>`:esc(t).replace(/\n/g,"<br>")).join("")||`<span class="muted">(nhập đoạn văn ở trên)</span>`}
+function lsTok(){lsClips();const txt=G("lfx").value,toks=tok(txt);G("lftok").innerHTML=toks.map((t,i)=>ISWx(t)?`<span class="tk ${LC.hide.includes(i)?"hid":""}" onclick="ESL.lsToggle(${i})">${esc(t)}</span>`:esc(t).replace(/\n/g,"<br>")).join("")||`<span class="muted">(nhập đoạn văn ở trên)</span>`}
 const ISWx=t=>/^[A-Za-z0-9'’-]+$/.test(t);
+function lsClips(){const e=G("lfclips");if(!e)return;const n=LC.hide.length;
+ e.innerHTML=n?Array.from({length:n},(_,i)=>{const k=i+1,c=LC.clips[k]||"",isData=/^data:/.test(c);return `<div class="row" style="margin-bottom:6px"><b style="min-width:62px">Chỗ ${k}:</b><button class="btn sm sec" type="button" onclick="ESL.clipPick(${k})">📎 Tải clip</button><input type="text" placeholder="hoặc dán link YouTube / Drive / .mp3 / .mp4" style="flex:1;min-width:180px" value="${isData?"":esc(c)}" onchange="ESL.clipUrl(${k},this.value)"><span class="muted" style="font-size:13px">${isData?"✅ đã tải clip ("+Math.round(c.length*.75/1024)+" KB)":c?"✅ link":"(trống – máy sẽ đọc câu chứa chỗ này)"}</span>${c?`<button class="btn sm red" type="button" onclick="ESL.clipClr(${k})">✖</button>`:""}</div>`}).join(""):`<span class="muted">Chọn từ cần ẩn ở trên, mỗi chỗ trống sẽ có một clip số 1, 2, 3…</span>`}
+let clipK=0;
+E.clipPick=k=>{clipK=k;G("lfc").click()};
+E.clipFile=async el=>{const f=el.files[0];el.value="";if(!f)return;if(f.size>3*1048576&&!confirm("Clip nặng "+(f.size/1048576).toFixed(1)+" MB làm tệp dữ liệu rất lớn. Nên dán link YouTube/Drive. Vẫn tải lên?"))return;try{LC.clips[clipK]=await readDataURL(f);lsClips()}catch(e){toast("Không đọc được clip","err")}};
+E.clipUrl=(k,v)=>{v=v.trim();if(v)LC.clips[k]=/^https?:/i.test(v)?v:"https://"+v;else delete LC.clips[k];lsClips()};
+E.clipClr=k=>{delete LC.clips[k];lsClips()};
 E.lsText=()=>{LC.hide=[];lsTok()};
 E.lsToggle=i=>{const k=LC.hide.indexOf(i);k<0?LC.hide.push(i):LC.hide.splice(k,1);lsTok()};
 E.lsAuto=()=>{const toks=tok(G("lfx").value),ws=lw(AS.lesson).map(w=>w.en.toLowerCase());const parts=new Set();ws.forEach(w=>w.split(/\s+/).forEach(p=>parts.add(p)));
@@ -564,7 +643,7 @@ E.lsClear=()=>{LC.hide=[];lsTok()};
 E.lsFromSents=()=>{const t=ls(AS.lesson).map(s=>s.en).join(" ");if(!t)return toast("Bài chưa có mẫu câu","err");G("lfx").value=t;LC.hide=[];E.lsAuto()};
 E.lsTest=()=>{const t=G("lfx").value;if(TMP.audio)playSrc(TMP.audio);else say(t,num(G("lfr").value,1,.5,1.5))};
 E.lsSave=()=>{const text=G("lfx").value.trim();if(!text)return toast("Hãy nhập đoạn văn","err");if(!LC.hide.length&&!confirm("Chưa chọn từ nào để ẩn. Vẫn lưu?"))return;
- DATA.listen[AS.lesson]={title:G("lft").value.trim()||"Listen and fill in the blanks",text:G("lfx").value,hide:LC.hide.slice().sort((a,b)=>a-b),maxPlays:num(G("lfm").value,0,0,20),rate:num(G("lfr").value,1,.5,1.5),bank:G("lfb").checked,hint:G("lfh").checked,showAns:G("lfs").checked,audio:TMP.audio||""};
+ DATA.listen[AS.lesson]={title:G("lft").value.trim()||"Listen and fill in the blanks",text:G("lfx").value,hide:LC.hide.slice().sort((a,b)=>a-b),clips:Object.fromEntries(Object.entries(LC.clips||{}).filter(([k])=>+k<=LC.hide.length)),maxPlays:num(G("lfm").value,0,0,20),rate:num(G("lfr").value,1,.5,1.5),bank:G("lfb").checked,hint:G("lfh").checked,showAns:G("lfs").checked,audio:TMP.audio||""};
  if(S.lf&&S.lf.lid===AS.lesson)S.lf=null;save();toast("✅ Đã lưu hoạt động nghe");reload()};
 E.lsDel=()=>{if(!confirm("Xóa hoạt động nghe của bài này?"))return;delete DATA.listen[AS.lesson];S.lf=null;save();reload()};
 
@@ -605,114 +684,196 @@ E.importJson=f=>{if(!f)return;const r=new FileReader();r.onload=()=>{try{const d
 E.reset=()=>{if(!confirm("Xóa TẤT CẢ nội dung ESL? Nên tải esl-data.json sao lưu trước."))return;DATA=blank();save();reload()};
 
 
+/* ---------- 7. Câu hỏi & game (ngân hàng item từ Excel: xem, sửa, xóa) ---------- */
+const TYPES=[["quiz","Quiz (trắc nghiệm)"],["fill","Fill (điền từ ___)"],["scramble","Scramble (sắp xếp câu)"],["odd","OddOneOut"],["tf","TrueFalse"],["fix","FixMistake"]];
+const ansShow=x=>{const a=x.a||{};return a.quiz||a.fill||a.odd||a.fix||(typeof a.tf==="boolean"?(a.tf?"TRUE":"FALSE"):"")||(x.sentence||"")};
+function itemsAdm(l){const it=DATA.items[l.id]||[],pr=DATA.pairs[l.id]||[];
+ return `<div class="row"><button class="btn" onclick="ESL.itForm()">➕ Thêm câu hỏi / game</button><button class="btn sec" onclick="ESL.prForm()">🔗 Thêm cặp ghép</button><button class="btn sec" onclick="ESL.admTab('i')">📥 Nhập hàng loạt từ Excel</button></div>
+ <p class="muted" style="margin:8px 0">Bài ${l.no}: <b>${it.filter(x=>x.types.includes("quiz")).length}</b> câu trắc nghiệm · <b>${it.length}</b> mục tổng · <b>${pr.length}</b> cặp ghép. Các mục này tự được dùng trong tab QUIZ và các game tương ứng.</p>
+ ${it.length?`<div style="overflow:auto"><table class="t"><tr><th>Loại</th><th>Câu hỏi / câu</th><th>Đáp án</th><th></th></tr>${it.map(x=>`<tr><td>${x.types.map(t=>`<span class="erev s">${esc(t)}</span>`).join(" ")}</td><td>${esc((x.q||x.sentence||"").slice(0,90))}</td><td>${esc(String(ansShow(x)).slice(0,50))}</td><td style="white-space:nowrap"><button class="btn sm sec" onclick="ESL.itForm('${x.id}')">✏</button> <button class="btn sm red" onclick="ESL.itDel('${x.id}')">🗑</button></td></tr>`).join("")}</table></div>`:`<div class="empty">Chưa có mục nào. Thêm tại đây hoặc nhập từ Excel.</div>`}
+ ${pr.length?`<h4 style="margin:12px 0 4px">🔗 Cặp ghép</h4><table class="t"><tr><th>Vế trái</th><th>Vế phải</th><th></th></tr>${pr.map((p,i)=>`<tr><td>${esc(p.l)}</td><td>${esc(p.r)}</td><td><button class="btn sm sec" onclick="ESL.prForm(${i})">✏</button> <button class="btn sm red" onclick="ESL.prDel(${i})">🗑</button></td></tr>`).join("")}</table>`:""}`}
+E.itDel=id=>{if(!confirm("Xóa mục này?"))return;DATA.items[AS.lesson]=(DATA.items[AS.lesson]||[]).filter(x=>x.id!==id);save();reload()};
+E.itForm=id=>{const x=id?(DATA.items[AS.lesson]||[]).find(y=>y.id===id):{types:["quiz"],opts:[],odd:[],a:{}};const o=x.opts||[],od=x.odd||[],a=x.a||{};
+ const ansLetter=(arr,t)=>{const i=arr.findIndex(z=>cmp(z,t));return i>=0?"ABCD"[i]:""};
+ modal(`<h3>${id?"✏ Sửa":"➕ Thêm"} câu hỏi / game</h3><div class="fg"><label>Dùng cho game (chọn một hoặc nhiều)</label><div class="row">${TYPES.map(([k,n])=>`<label class="chip"><input type="checkbox" name="itt" value="${k}" ${x.types.includes(k)?"checked":""}> ${n}</label>`).join("")}</div></div>
+ ${fld("Câu hỏi / nhận định / câu có ___ / câu sai",`<textarea id="itq" style="width:100%;min-height:60px">${esc(x.q||"")}</textarea>`)}
+ <div class="gfl">${[0,1,2,3].map(i=>`<div class="fg"><label>Option ${"ABCD"[i]}</label><input type="text" id="ito${i}" value="${esc(o[i]||"")}"></div>`).join("")}${[0,1,2,3].map(i=>`<div class="fg"><label>Odd ${"ABCD"[i]} (OddOneOut)</label><input type="text" id="itd${i}" value="${esc(od[i]||"")}"></div>`).join("")}</div>
+ ${fld("Answer – Quiz: A/B/C/D · Fill: từ cần điền · OddOneOut: A/B/C/D · TrueFalse: TRUE/FALSE · FixMistake: câu đúng",`<input type="text" id="ita" style="width:100%" value="${esc(x.raw||ansLetter(o,a.quiz)||a.fill||ansLetter(od,a.odd)||(typeof a.tf==="boolean"?(a.tf?"TRUE":"FALSE"):"")||a.fix||"")}">`)}
+ ${fld("Sentence (Scramble) – câu đúng",`<input type="text" id="its_" style="width:100%" value="${esc(x.sentence||"")}">`)}${fld("Words (Scramble) – các cụm từ ngăn bằng |, bỏ trống = tách theo từ",`<input type="text" id="itw" style="width:100%" value="${esc((x.chunks||[]).join("|"))}">`)}
+ ${fld("Hint (gợi ý)",`<input type="text" id="ith" style="width:100%" value="${esc(x.hint||"")}">`)}${fld("Explanation (giải thích)",`<input type="text" id="itx" style="width:100%" value="${esc(x.expl||"")}">`)}
+ <div class="row"><button class="btn" onclick="ESL.itSave('${id||""}')">💾 Lưu</button><button class="btn sec" onclick="closeModal()">Hủy</button></div>`,true)};
+E.itSave=id=>{const types=[...document.querySelectorAll('input[name="itt"]:checked')].map(e=>e.value);if(!types.length)return toast("Hãy chọn ít nhất một loại game","err");
+ const v=k=>G(k).value.trim(),opts=[0,1,2,3].map(i=>v("ito"+i)).filter(Boolean),odd=[0,1,2,3].map(i=>v("itd"+i)).filter(Boolean),raw=v("ita"),q=v("itq"),sentence=v("its_"),chunks=v("itw").split("|").map(s=>s.trim()).filter(Boolean);
+ const pickL=(arr)=>{const i="ABCD".indexOf(raw.toUpperCase());return /^[A-D]$/i.test(raw)&&arr[i]!==undefined?arr[i]:""},a={};
+ const err=[];
+ if(types.includes("quiz")){a.quiz=pickL(opts);if(!q||opts.length<2||!a.quiz)err.push("Quiz cần câu hỏi, ≥2 option và Answer là A–D")}
+ if(types.includes("fill")){a.fill=/^[A-D]$/i.test(raw)&&opts.length?pickL(opts):raw;if(!/_{2,}/.test(q)||!a.fill)err.push("Fill cần câu có ___ và đáp án")}
+ if(types.includes("scramble")){if(!sentence)err.push("Scramble cần Sentence")}
+ if(types.includes("odd")){a.odd=pickL(odd);if(odd.length<3||!a.odd)err.push("OddOneOut cần ≥3 Odd và Answer A–D")}
+ if(types.includes("tf")){const t=/^(true|t|dung|đúng|yes|1)$/i.test(raw),f=/^(false|f|sai|no|0)$/i.test(raw);if(!q||(!t&&!f))err.push("TrueFalse cần nhận định và Answer TRUE/FALSE");a.tf=t}
+ if(types.includes("fix")){a.fix=raw;if(!q||!raw)err.push("FixMistake cần câu sai và câu đúng")}
+ if(err.length)return toast(err[0],"err");
+ const item={id:id||uid("i"),types,q,opts,odd,a,raw,sentence,chunks,hint:v("ith"),expl:v("itx"),src:"m",img:""};const arr=DATA.items[AS.lesson]||(DATA.items[AS.lesson]=[]);
+ if(id){const k=arr.findIndex(y=>y.id===id);item.src=arr[k].src||"m";item.img=arr[k].img||"";arr[k]=item}else arr.push(item);save();closeModal();toast("✅ Đã lưu");reload()};
+E.prForm=i=>{const p=i!=null?DATA.pairs[AS.lesson][i]:{};modal(`<h3>${i!=null?"✏ Sửa":"🔗 Thêm"} cặp ghép</h3>${fld("Vế trái (LeftItem)",`<input type="text" id="pl" style="width:100%" value="${esc(p.l||"")}">`)}${fld("Vế phải (RightItem)",`<input type="text" id="pr" style="width:100%" value="${esc(p.r||"")}">`)}${fld("Hint",`<input type="text" id="ph" style="width:100%" value="${esc(p.hint||"")}">`)}<div class="row"><button class="btn" onclick="ESL.prSave(${i!=null?i:-1})">💾 Lưu</button><button class="btn sec" onclick="closeModal()">Hủy</button></div>`)};
+E.prSave=i=>{const l=G("pl").value.trim(),r=G("pr").value.trim();if(!l||!r)return toast("Cần nhập cả hai vế","err");const arr=DATA.pairs[AS.lesson]||(DATA.pairs[AS.lesson]=[]),o={l,r,hint:G("ph").value.trim()};i>=0?arr[i]=o:arr.push(o);save();closeModal();reload()};
+E.prDel=i=>{DATA.pairs[AS.lesson].splice(i,1);save();reload()};
+
 /* =====================================================================
-   NHẬP NHANH: 1 tệp Excel cho cả lớp + ghép ảnh/audio tự động theo tên tệp
+   NHẬP NHANH: 1 workbook Excel cho cả lớp (khung English Game Lab) + ghép ảnh/audio/video theo tên tệp
+   Sheets: Keywords · Sentences · Listening · Quiz · GameData · MatchPairs · Games
    ===================================================================== */
 const rmDia=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/gi,"d").toLowerCase();
 const slug=s=>rmDia(s).replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
-const GAMEKEY=[["match","match","ghep"],["guess","guess","doan"],["search","search","tim tu","word search"],["flip","flip","lat the"],["fill","fill","dien tu"],["order","order","sap xep"],["quiz","quiz","trac nghiem"]];
-function gameFromCell(v){const s=rmDia(v).trim();if(!s)return null;if(/^[1-7]$/.test(s))return GORDER[+s-1];for(const k of GAMEKEY)if(k.slice(1).some(x=>s.includes(x)))return k[0];return null}
+const hk=h=>rmDia(h).replace(/\(.*?\)/g,"").replace(/[^a-z0-9]/g,"");
+const GAMEKEY=[["pairs",["pair","ghep cap"]],["odd",["odd","khac loai"]],["tf",["true","false","tf","dung sai"]],["fix",["fix","sua"]],["order",["order","scramble","sap xep"]],["fill",["fill","dien tu"]],["search",["search","tim tu"]],["flip",["flip","lat the"]],["guess",["guess","doan"]],["match",["match","ghep"]]];
+function gameFromCell(v){const s=rmDia(v).trim();if(!s)return null;const m=/^(\d+)/.exec(s);if(m&&GPLAY[+m[1]-1])return GPLAY[+m[1]-1];for(const[k,ws]of GAMEKEY)if(ws.some(x=>s.includes(x)))return k;return null}
 const lessonByNo=(g,n)=>lessonsOf(g).find(l=>String(l.no)===String(parseInt(n,10)));
-const yes=v=>/^(x|1|co|có|y|yes|true|on tap|ôn tập)$/i.test(String(v||"").trim());
-const GUIDE=["HƯỚNG DẪN ĐIỀN TỆP MẪU ESL – HỆ THỐNG TỰ HỌC KHTN & SINH HỌC","",
-"Một tệp dùng cho CẢ LỚP. Cột đầu tiên của mọi trang là “Bài (số)” – số thứ tự bài trong trang “Danh mục bài”. Dòng “Ví dụ” sẽ được bỏ qua.","",
-"TỪ KHÓA: mỗi dòng một từ. Cột “Từ ôn tập” ghi x nếu từ này đã học ở bài khác. Hình và audio ghép sau theo tên tệp (xem tab Nhập nhanh).",
-"MẪU CÂU: mỗi dòng một câu, đúng thứ tự muốn hiển thị. Thứ tự này cũng là số 1, 2, 3… khi ghép audio câu (1.mp3, 2.mp3…).",
-"NGHE ĐIỀN TỪ: một dòng cho mỗi bài. Đặt từ cần ẩn trong dấu ngoặc vuông, ví dụ: A [cell] has a [nucleus]. Nếu không đặt ngoặc, hệ thống tự ẩn các từ khóa của bài.",
-"QUIZ: câu hỏi tự soạn cho game Science Quiz. Cột “Đáp án đúng” luôn là đáp án đúng; các cột “Sai” sẽ được xáo trộn khi chơi.",
-"TRÒ CHƠI: ghi tên hoặc số của 3–4 game cho mỗi bài: 1 Match · 2 Guess · 3 Word Search · 4 Flip · 5 Fill · 6 Sentence Order · 7 Quiz. Bài không có dòng sẽ dùng bộ mặc định.","",
-"Nhập lại cùng tệp nhiều lần là an toàn: từ khóa được cập nhật (giữ hình/audio đã có), mẫu câu – bài nghe – quiz – game của bài có trong tệp sẽ được thay mới.",
-"Gợi ý: soạn bài nào nhập bài đó; có thể để trống các trang không dùng."];
-const SH={w:["Từ khóa",["Bài (số)","English","IPA","Nghĩa tiếng Việt","Câu ví dụ","Mô tả tiếng Anh (không bắt buộc)","Từ ôn tập (x)"],[10,22,22,26,44,40,12]],
- s:["Mẫu câu",["Bài (số)","Câu tiếng Anh","Nghĩa tiếng Việt"],[10,60,60]],
- l:["Nghe điền từ",["Bài (số)","Tiêu đề","Đoạn văn – từ cần ẩn đặt trong [ ]","Số lần nghe tối đa (0 = không giới hạn)"],[10,30,90,18]],
- q:["Quiz",["Bài (số)","Câu hỏi","Đáp án đúng","Sai 1","Sai 2","Sai 3"],[10,50,24,24,24,24]],
- g:["Trò chơi",["Bài (số)","Game 1","Game 2","Game 3","Game 4"],[10,16,16,16,16]]};
-function sheetOf(k,rows){const[n,h,w]=SH[k];return{name:n,head:h,rows,widths:w}}
-function catSh(g){const rows=[["Số bài","Tên bài","Chương"],...lessonsOf(g).map(l=>[l.no,l.name,l.ch.name])];return{name:"Danh mục bài",xml:sheetXml(rows,{widths:[10,60,50],style:ri=>ri===0?1:2})}}
-const guideRows=()=>GUIDE;
-E.tplXlsx=()=>{const g=AS.g,no=(lessonsOf(g)[0]||{no:1}).no;
- const sheets=[sheetOf("w",[["Ví dụ","cell","sel","tế bào","A cell is very small.","The basic unit of life.",""],["Ví dụ","nucleus","ˈnjuːkliəs","nhân tế bào","The nucleus controls the cell.","",""],...Array.from({length:10},()=>[""])]),
-  sheetOf("s",[["Ví dụ","A cell grows before it divides.","Tế bào lớn lên trước khi phân chia."],...Array.from({length:5},()=>[""])]),
-  sheetOf("l",[["Ví dụ","Listen and fill in the blanks","A [cell] has a [nucleus]. The [membrane] protects the cell.",2],...Array.from({length:3},()=>[""])]),
-  sheetOf("q",[["Ví dụ","What does the nucleus do?","It controls the cell","It makes energy","It stores water","It gives color"],...Array.from({length:5},()=>[""])]),
-  sheetOf("g",[["Ví dụ","1 Match","4 Flip","6 Sentence Order","5 Fill"],...Array.from({length:3},()=>[""])]),catSh(g)];
- download(buildWorkbook(sheets,GUIDE),`Mau-ESL-${gName(g).replace(" ","")}.xlsx`);toast("✅ Đã tải mẫu Excel ESL. Điền xong thì nhập lại ở tab này.")};
-/* ---- xuất nội dung hiện có ra Excel (để sửa hàng loạt rồi nhập lại) ---- */
-function bracketText(c){const toks=tok(c.text),hide=new Set(c.hide||[]);return toks.map((t,i)=>hide.has(i)?"["+t+"]":t).join("")}
-E.exportXlsx=()=>{const g=AS.g,ls_=lessonsOf(g),W=[],Sn=[],L=[],Q=[],Gm=[];
- ls_.forEach(l=>{lw(l.id).forEach(w=>W.push([l.no,w.en,w.ipa||"",w.vi,w.ex||"",w.def||"",w.rev?"x":""]));ls(l.id).forEach(s=>Sn.push([l.no,s.en,s.vi||""]));
-  const c=DATA.listen[l.id];if(c&&c.text)L.push([l.no,c.title||"",bracketText(c),c.maxPlays||0]);
-  const arr=DATA.games[l.id];if(Array.isArray(arr)){Gm.push([l.no,...arr.map(x=>GAMEDEF[x.type].name)]);}
-  const qq=(DATA.quiz[l.id]||"")+"\n"+(Array.isArray(arr)&&arr.find(x=>x.type==="quiz")?arr.find(x=>x.type==="quiz").cfg.qs||"":"");qq.split(/\r?\n/).forEach(line=>{const p=line.split("|").map(x=>x.trim());if(p.length>=3)Q.push([l.no,...p])})});
- if(!W.length&&!Sn.length&&!L.length)return toast("Lớp này chưa có nội dung ESL để xuất","err");
- download(buildWorkbook([sheetOf("w",W),sheetOf("s",Sn),sheetOf("l",L),sheetOf("q",Q),sheetOf("g",Gm),catSh(g)],GUIDE),`ESL-${gName(g).replace(" ","")}-${new Date().toISOString().slice(0,10)}.xlsx`);toast("✅ Đã xuất nội dung ESL ra Excel")};
+const yes=v=>/^(x|1|co|yes|y|true|on tap)$/i.test(rmDia(v).trim());
+const TMAP=s=>{s=rmDia(s).replace(/[^a-z]/g,"");return s.startsWith("quiz")?"quiz":s.startsWith("fill")?"fill":s.startsWith("scramble")?"scramble":s.startsWith("odd")?"odd":(s.startsWith("true")||s==="tf"||s.startsWith("false"))?"tf":s.startsWith("fix")?"fix":""};
+const SH={
+ k:["Keywords",["Lesson (số bài)","English","IPA","Vietnamese","Example","Definition (optional)","Review (x)"],[12,22,22,26,44,40,12]],
+ s:["Sentences",["Lesson (số bài)","Sentence","Vietnamese","Words (cụm từ ngăn bằng |, không bắt buộc)"],[12,56,50,50]],
+ l:["Listening",["Lesson (số bài)","Title","Passage (đặt 5 từ cần ẩn trong [ ])","MaxPlays","Link1","Link2","Link3","Link4","Link5"],[12,28,90,10,24,24,24,24,24]],
+ q:["Quiz",["Lesson (số bài)","Question","OptionA","OptionB","OptionC","OptionD","Answer (A/B/C/D)","Hint","Explanation"],[12,50,22,22,22,22,12,34,44]],
+ d:["GameData",["Lesson (số bài)","ID","Topic","GameTypes","Question","ImageURL","OptionA","OptionB","OptionC","OptionD","Answer","Hint","Explanation","Sentence","Words","OddA","OddB","OddC","OddD","Difficulty"],[12,6,16,34,44,14,18,18,18,18,22,30,36,36,34,14,14,14,14,10]],
+ p:["MatchPairs",["Lesson (số bài)","ID","Topic","LeftItem","RightItem","Hint"],[12,6,16,24,44,30]],
+ g:["Games",["Lesson (số bài)","Game1","Game2","Game3","Game4"],[12,18,18,18,18]]};
+const sheetOf=(k,rows)=>({name:SH[k][0],head:SH[k][1],rows,widths:SH[k][2]});
+function catSh(g){const rows=[["Số bài","Tên bài","Chương"],...lessonsOf(g).map(l=>[l.no,l.name,l.ch.name])];return{name:"Lessons",xml:sheetXml(rows,{widths:[10,60,50],style:ri=>ri===0?1:2})}}
+const GUIDE=["ESL – EXCEL TEMPLATE · HỆ THỐNG TỰ HỌC KHTN & SINH HỌC","",
+"MỘT workbook dùng cho CẢ LỚP. Cột đầu của mọi trang là “Lesson (số bài)” – lấy số từ trang Lessons. Dòng “Ví dụ” được bỏ qua. Trang nào không dùng có thể để trống. Nhập lại nhiều lần an toàn.","",
+"① Keywords – 5–10 từ khóa mỗi bài: English, IPA, Vietnamese, Example (câu ví dụ), Definition (mô tả tiếng Anh, tùy chọn). Review = x nếu là từ ôn tập (đã học ở bài khác).",
+"② Sentences – mẫu câu đơn giản, đúng thứ tự muốn hiển thị. Cột Words (tùy chọn): các từ/cụm từ của câu, ngăn bằng | để dùng cho game sắp xếp, ví dụ: Cells|are|the basic units|of life. Bỏ trống = tách theo từng từ.",
+"③ Listening – một dòng cho mỗi bài: đoạn văn ngắn, đặt 5 từ cần ẩn trong [ ], ví dụ: A [cell] has a [nucleus]. Cột Link1–Link5 (tùy chọn): link YouTube/Drive/.mp3/.mp4 cho chỗ trống số 1–5. Hoặc tải tệp ở tab Nhập nhanh: nghe1.mp4 … nghe5.mp4 (hay 1.mp4 … 5.mp4 với video).",
+"④ Quiz – 5 câu trắc nghiệm đơn giản mỗi bài: Question, OptionA–D, Answer (A/B/C/D), Hint, Explanation. Dùng cho tab QUIZ.",
+"⑤ GameData – khung English Game Lab: mỗi dòng là một câu/nhiệm vụ. GameTypes dùng mã (ngăn bằng ; ): Quiz · Fill · Scramble · OddOneOut · TrueFalse · FixMistake.",
+"   Quiz: Question + OptionA–D + Answer (A–D) · Fill: Question có ___ + Answer (từ cần điền, hoặc A–D nếu có Option) · Scramble: Sentence (+ Words) · OddOneOut: OddA–OddD + Answer (A–D) · TrueFalse: Question + Answer TRUE/FALSE · FixMistake: Question (câu sai) + Answer (câu đúng).",
+"⑥ MatchPairs – mỗi dòng là một cặp: LeftItem – RightItem (+ Hint). Nên 4–6 cặp mỗi bài.",
+"⑦ Games – chọn 3–4 game cho từng bài (ghi tên hoặc số): 1 Match picture · 2 Guess · 3 Word Search · 4 Flip · 5 Fill · 6 Sentence Order · 7 Odd One Out · 8 True/False · 9 Fix Mistake · 10 Match Pairs. Bài không có dòng sẽ dùng bộ mặc định: Match + Flip + 2 game có dữ liệu từ GameData/MatchPairs.","",
+"Gợi ý bộ học liệu gọn cho mỗi bài: 8–10 từ khóa · 3 mẫu câu · 1 đoạn nghe 5 chỗ trống · 5 câu Quiz · 4–6 dòng GameData (Scramble, Fill, TrueFalse, OddOneOut) · 4–6 cặp MatchPairs."];
+E.tplXlsx=()=>{const g=AS.g,pad=n=>Array.from({length:n},()=>[""]);
+ const sheets=[sheetOf("k",[["Ví dụ","cell","sel","tế bào","A cell is very small.","The basic unit of life.",""],["Ví dụ","nucleus","ˈnjuːkliəs","nhân tế bào","The nucleus controls the cell.","The control centre of the cell.",""],...pad(8)]),
+  sheetOf("s",[["Ví dụ","Cells are the basic units of life.","Tế bào là đơn vị cơ bản của sự sống.","Cells|are|the basic units|of life"],...pad(3)]),
+  sheetOf("l",[["Ví dụ","Listen and fill in","A [cell] is very small. The [nucleus] controls the cell. The [membrane] surrounds the cell. Cells need [energy] to [grow].",3,"","","","",""],...pad(2)]),
+  sheetOf("q",[["Ví dụ","What is the function of the nucleus?","Makes energy","Controls cell activities","Stores water","Makes food","B","It controls the cell.","The nucleus contains genetic material."],...pad(4)]),
+  sheetOf("d",[["Ví dụ",1,"Cell Biology","Fill;Quiz","The cell membrane ___ the cell.","","surrounds","controls","divides","colours","A","Think about the outer boundary.","The membrane surrounds the cell.","The cell membrane surrounds the cell.","The|cell membrane|surrounds|the cell","","","","","Easy"],
+    ["Ví dụ",2,"Cell Biology","Scramble","Arrange the words to make a correct sentence.","","","","","","Cells are the basic units of life.","Start with 'Cells'.","This sentence describes cells.","Cells are the basic units of life.","Cells|are|the basic units|of life","","","","","Easy"],
+    ["Ví dụ",3,"Cell Biology","OddOneOut","Find the odd one out.","","","","","","C","Three are cell parts.","Bicycle is not a cell part.","","","Nucleus","Cytoplasm","Bicycle","Cell membrane","Easy"],
+    ["Ví dụ",4,"Cell Biology","TrueFalse","The nucleus controls cell activities.","","","","","","TRUE","Think about the function of the nucleus.","This statement is true.","","","","","","","Easy"],
+    ["Ví dụ",5,"Cell Biology","FixMistake","Find and correct the mistake: The nucleus make energy for the cell.","","","","","","The nucleus controls cell activities.","Check the function.","The nucleus controls cell activities.","","","","","","","Medium"],...pad(6)]),
+  sheetOf("p",[["Ví dụ",1,"Cell Biology","Nucleus","Controls cell activities","Think of the control centre."],["Ví dụ",2,"Cell Biology","Chloroplast","Site of photosynthesis","Green organelle"],...pad(6)]),
+  sheetOf("g",[["Ví dụ","6 Sentence Order","5 Fill","8 True/False","10 Match Pairs"],...pad(3)]),catSh(g)];
+ download(buildWorkbook(sheets,GUIDE),`Mau-ESL-${gName(g).replace(" ","")}.xlsx`);toast("✅ Đã tải mẫu Excel ESL. Điền xong thì tải lại ở tab này.")};
 
-/* ---- đọc tệp Excel thành "kế hoạch nhập" ---- */
+/* ---- xuất nội dung hiện có ra Excel ---- */
+const bracketText=c=>{const toks=tok(c.text),hide=new Set(c.hide||[]);return toks.map((t,i)=>hide.has(i)?"["+t+"]":t).join("")};
+function ansOf(x){if(x.raw)return x.raw;const a=x.a||{},L=(arr,t)=>{const i=arr.findIndex(z=>cmp(z,t));return i>=0?"ABCD"[i]:""};return a.quiz?L(x.opts||[],a.quiz):a.fill||(a.odd?L(x.odd||[],a.odd):"")||(typeof a.tf==="boolean"?(a.tf?"TRUE":"FALSE"):"")||a.fix||""}
+E.exportXlsx=()=>{const g=AS.g,K=[],Sn=[],Li=[],Q=[],D=[],P=[],Gm=[];
+ lessonsOf(g).forEach(l=>{lw(l.id).forEach(w=>K.push([l.no,w.en,w.ipa||"",w.vi,w.ex||"",w.def||"",w.rev?"x":""]));ls(l.id).forEach(s=>Sn.push([l.no,s.en,s.vi||"",(s.chunks||[]).join("|")]));
+  const c=DATA.listen[l.id];if(c&&c.text){const cl=c.clips||{};Li.push([l.no,c.title||"",bracketText(c),c.maxPlays||0,...[1,2,3,4,5].map(k=>/^data:/.test(cl[k]||"")?"":(cl[k]||""))])}
+  (DATA.items[l.id]||[]).forEach((x,i)=>{const o=x.opts||[],od=x.odd||[];if(x.src==="q")Q.push([l.no,x.q,o[0]||"",o[1]||"",o[2]||"",o[3]||"",ansOf(x),x.hint||"",x.expl||""]);
+   else D.push([l.no,i+1,l.name,x.types.map(t=>({quiz:"Quiz",fill:"Fill",scramble:"Scramble",odd:"OddOneOut",tf:"TrueFalse",fix:"FixMistake"})[t]).join(";"),x.q||"","",o[0]||"",o[1]||"",o[2]||"",o[3]||"",ansOf(x),x.hint||"",x.expl||"",x.sentence||"",(x.chunks||[]).join("|"),od[0]||"",od[1]||"",od[2]||"",od[3]||"",""])});
+  (DATA.pairs[l.id]||[]).forEach((p,i)=>P.push([l.no,i+1,l.name,p.l,p.r,p.hint||""]));
+  const arr=DATA.games[l.id];if(Array.isArray(arr))Gm.push([l.no,...arr.filter(x=>x.type!=="quiz").map(x=>GAMEDEF[x.type].name)])});
+ if(!(K.length+Sn.length+Li.length+Q.length+D.length+P.length))return toast("Lớp này chưa có nội dung ESL để xuất","err");
+ download(buildWorkbook([sheetOf("k",K),sheetOf("s",Sn),sheetOf("l",Li),sheetOf("q",Q),sheetOf("d",D),sheetOf("p",P),sheetOf("g",Gm),catSh(g)],GUIDE),`ESL-${gName(g).replace(" ","")}-${new Date().toISOString().slice(0,10)}.xlsx`);toast("✅ Đã xuất nội dung ESL ra Excel (clip tải lên không nằm trong Excel)")};
+
+/* ---- đọc Excel thành "kế hoạch nhập" ---- */
 let PLAN=null;
-function autoHide(text,lid){const parts=new Set();lw(lid).forEach(w=>w.en.toLowerCase().split(/\s+/).forEach(p=>parts.add(p)));
- const toks=tok(text),h=[];toks.forEach((t,i)=>{if(!ISWx(t))return;const x=t.toLowerCase();if(parts.has(x)||parts.has(x.replace(/(es|s)$/,"")))h.push(i)});return h}
-function parseBracket(raw){const clean=[],ranges=[];let out="",i=0;raw=String(raw||"");
+const autoHide=(text,lid)=>{const parts=new Set();lw(lid).forEach(w=>w.en.toLowerCase().split(/\s+/).forEach(p=>parts.add(p)));const h=[];tok(text).forEach((t,i)=>{if(!ISWx(t))return;const x=t.toLowerCase();if(parts.has(x)||parts.has(x.replace(/(es|s)$/,"")))h.push(i)});return h};
+function parseBracket(raw){let out="",i=0;const ranges=[];raw=String(raw||"");
  while(i<raw.length){const a=raw.indexOf("[",i);if(a<0){out+=raw.slice(i);break}const b=raw.indexOf("]",a);if(b<0){out+=raw.slice(i);break}out+=raw.slice(i,a);const s=out.length;out+=raw.slice(a+1,b);ranges.push([s,out.length]);i=b+1}
- const toks=tok(out),hide=[];let pos=0;toks.forEach((t,k)=>{const s=pos,e=pos+t.length;pos=e;if(ISWx(t)&&ranges.some(([a,b])=>s>=a&&e<=b))hide.push(k)});return{text:out,hide}}
-async function readPlan(file){const g=AS.g,sh=await xlsxSheets(await file.arrayBuffer()),P={g,words:[],sents:[],listen:[],quiz:[],games:[],errors:[],warns:[],lessons:new Set()};
- const find=re=>sh.find(x=>re.test(rmDia(x.name)));
- const rowsOf=(x,cb)=>{if(!x)return;x.rows.slice(1).forEach((r,i)=>{const a=String(r[0]??"").trim();if(!a||/^vi du/i.test(rmDia(a)))return;const l=lessonByNo(g,a);if(!l){P.errors.push(`Trang “${x.name}”, dòng ${i+2}: không có bài số “${a}” ở ${gName(g)}.`);return}P.lessons.add(l.id);cb(l,r.map(c=>String(c??"").trim()),i+2)})};
- rowsOf(find(/tu khoa/),(l,r,n)=>{if(!r[1]||!r[3]){P.errors.push(`Từ khóa, dòng ${n}: thiếu English hoặc nghĩa tiếng Việt.`);return}P.words.push({lid:l.id,en:r[1],ipa:r[2],vi:r[3],ex:r[4],def:r[5],rev:yes(r[6])})});
- rowsOf(find(/mau cau/),(l,r,n)=>{if(!r[1]){return}P.sents.push({lid:l.id,en:r[1],vi:r[2]})});
- rowsOf(find(/nghe/),(l,r,n)=>{if(!r[2]){P.errors.push(`Nghe điền từ, dòng ${n}: thiếu đoạn văn.`);return}const hasB=/\[[^\]]+\]/.test(r[2]);let t,h;if(hasB){const x=parseBracket(r[2]);t=x.text;h=x.hide}else{t=r[2];h=null}P.listen.push({lid:l.id,title:r[1]||"Listen and fill in the blanks",text:t,hide:h,maxPlays:Math.max(0,parseInt(r[3],10)||0)})});
- rowsOf(find(/quiz/),(l,r,n)=>{const p=r.slice(1).filter(Boolean);if(p.length<3){P.errors.push(`Quiz, dòng ${n}: cần câu hỏi, đáp án đúng và ít nhất 1 đáp án sai.`);return}P.quiz.push({lid:l.id,line:p.join(" | ")})});
- rowsOf(find(/tro choi/),(l,r,n)=>{const ts=[];r.slice(1).forEach(c=>{if(!c)return;const t=gameFromCell(c);if(!t)P.warns.push(`Trò chơi, dòng ${n}: không hiểu “${c}”.`);else if(!ts.includes(t))ts.push(t)});if(ts.length)P.games.push({lid:l.id,types:ts})});
- const nw={};P.words.forEach(w=>{if(!w.rev)nw[w.lid]=(nw[w.lid]||0)+1});Object.entries(nw).forEach(([k,v])=>{if(v>12)P.warns.push(`${lessonShort(k)}: ${v} từ khóa mới (nên khoảng 10).`)});
+ const hide=[];let pos=0;tok(out).forEach((t,k)=>{const s=pos,e=pos+t.length;pos=e;if(ISWx(t)&&ranges.some(([a,b])=>s>=a&&e<=b))hide.push(k)});return{text:out,hide}}
+function tableOf(sh){if(!sh||!sh.rows.length)return[];const keys=sh.rows[0].map(hk);return sh.rows.slice(1).map((r,i)=>{const o={};keys.forEach((k,j)=>{if(k&&o[k]===undefined)o[k]=r[j]});return{n:i+2,o}})}
+const V_=(o,...ks)=>{for(const k of ks){const x=o[k];if(x!=null&&String(x).trim()!=="")return String(x).trim()}return""};
+async function readPlan(file){const g=AS.g,sh=await xlsxSheets(await file.arrayBuffer()),P={g,words:[],sents:[],listen:[],items:[],pairs:[],games:[],errors:[],warns:[],lessons:new Set(),seen:{q:new Set(),g:new Set(),p:new Set()}};
+ const find=re=>sh.find(x=>re.test(rmDia(x.name).trim()));
+ const lessonOf=(o,name,n)=>{const raw=V_(o,"lesson","bai","baiso");if(/^(vi du|example)/.test(rmDia(raw)))return null;
+  let l=null;if(raw)l=lessonByNo(g,raw);else{const t=V_(o,"topic");if(!t)return null;const T=rmDia(t);l=lessonsOf(g).find(x=>{const N=rmDia(x.name);return N===T||T.includes(N)})||(/(\d+)/.test(T)?lessonByNo(g,/(\d+)/.exec(T)[1]):null)}
+  if(!l){P.errors.push(`Trang “${name}”, dòng ${n}: không tìm thấy bài “${raw||V_(o,"topic")}” ở ${gName(g)}.`);return null}P.lessons.add(l.id);return l};
+ const each=(re,cb)=>{const x=find(re);if(!x)return;tableOf(x).forEach(({n,o})=>{const l=lessonOf(o,x.name,n);if(l)cb(l,o,n,x.name)})};
+ each(/^(keywords?|tu khoa)/,(l,o,n)=>{const en=V_(o,"english","tuvung"),vi=V_(o,"vietnamese","nghia","nghiatiengviet");if(!en||!vi){P.errors.push(`Keywords, dòng ${n}: thiếu English hoặc Vietnamese.`);return}P.words.push({lid:l.id,en,ipa:V_(o,"ipa"),vi,ex:V_(o,"example","cauvidu"),def:V_(o,"definition","mota"),rev:yes(V_(o,"review","tuontap"))})});
+ each(/^(sentences?|mau cau)/,(l,o,n)=>{const en=V_(o,"sentence","cautienganh");if(!en)return;const ch=V_(o,"words").split("|").map(s=>s.trim()).filter(Boolean);P.sents.push({lid:l.id,en,vi:V_(o,"vietnamese","nghia","nghiatiengviet"),chunks:ch.length>1?ch:[]})});
+ each(/^(listening|nghe)/,(l,o,n)=>{const raw=V_(o,"passage","doanvan");if(!raw){P.errors.push(`Listening, dòng ${n}: thiếu đoạn văn (Passage).`);return}const hasB=/\[[^\]]+\]/.test(raw);let t=raw,h=null;if(hasB){const x=parseBracket(raw);t=x.text;h=x.hide}
+  const clips={};[1,2,3,4,5].forEach(k=>{const u=V_(o,"link"+k);if(u)clips[k]=/^https?:/i.test(u)?u:"https://"+u});
+  P.listen.push({lid:l.id,title:V_(o,"title","tieude")||"Listen and fill in the blanks",text:t,hide:h,maxPlays:Math.max(0,parseInt(V_(o,"maxplays","solannghe"),10)||0),clips});
+  const nh=(h||autoHide(t,l.id)).length;if(nh!==5)P.warns.push(`${lessonShort(l.id)}: đoạn nghe có ${nh} chỗ trống (nên đúng 5).`)});
+ each(/^(quiz|trac nghiem)/,(l,o,n)=>{const q=V_(o,"question","cauhoi");let raw4=[V_(o,"optiona"),V_(o,"optionb"),V_(o,"optionc"),V_(o,"optiond")],ans=V_(o,"answer","dapan"),a="";
+  if(!raw4.some(Boolean)&&V_(o,"dapandung")){raw4=[V_(o,"dapandung"),V_(o,"sai1"),V_(o,"sai2"),V_(o,"sai3")];ans="A"}
+  const opts=raw4.filter(Boolean);if(/^[A-D]$/i.test(ans))a=raw4["ABCD".indexOf(ans.toUpperCase())]||"";
+  if(!q||opts.length<2||!a){P.errors.push(`Quiz, dòng ${n}: cần Question, ít nhất 2 Option và Answer là A–D trỏ tới option có nội dung.`);return}
+  P.seen.q.add(l.id);P.items.push({id:uid("i"),lesson:l.id,src:"q",types:["quiz"],q,opts,odd:[],a:{quiz:a},raw:ans.toUpperCase(),sentence:"",chunks:[],hint:V_(o,"hint","goiy"),expl:V_(o,"explanation","giaithich"),img:""})});
+ each(/^gamedata/,(l,o,n)=>{const types=V_(o,"gametypes").split(/[;,|\/]+/).map(TMAP).filter(Boolean);if(!types.length){P.errors.push(`GameData, dòng ${n}: GameTypes không hợp lệ (dùng Quiz; Fill; Scramble; OddOneOut; TrueFalse; FixMistake).`);return}
+  const q=V_(o,"question"),raw4=[V_(o,"optiona"),V_(o,"optionb"),V_(o,"optionc"),V_(o,"optiond")],odd4=[V_(o,"odda"),V_(o,"oddb"),V_(o,"oddc"),V_(o,"oddd")],ans=V_(o,"answer"),sentence=V_(o,"sentence"),chunks=V_(o,"words").split("|").map(s=>s.trim()).filter(Boolean);
+  const pk=(arr)=>/^[A-D]$/i.test(ans)?(arr["ABCD".indexOf(ans.toUpperCase())]||""):"",a={},ok=[];
+  for(const t of types){if(t==="quiz"){const x=pk(raw4);if(q&&raw4.filter(Boolean).length>=2&&x){a.quiz=x;ok.push(t)}else P.warns.push(`GameData dòng ${n}: bỏ Quiz (thiếu Option hoặc Answer A–D).`)}
+   else if(t==="fill"){const x=/^[A-D]$/i.test(ans)&&raw4.some(Boolean)?pk(raw4):ans;if(/_{2,}/.test(q)&&x&&!/^[A-D]$/.test(x)){a.fill=x;ok.push(t)}else P.warns.push(`GameData dòng ${n}: bỏ Fill (cần câu có ___ và đáp án).`)}
+   else if(t==="scramble"){if(sentence){ok.push(t)}else P.warns.push(`GameData dòng ${n}: bỏ Scramble (thiếu Sentence).`)}
+   else if(t==="odd"){const x=pk(odd4);if(odd4.filter(Boolean).length>=3&&x){a.odd=x;ok.push(t)}else P.warns.push(`GameData dòng ${n}: bỏ OddOneOut (cần ≥3 Odd và Answer A–D).`)}
+   else if(t==="tf"){const T=rmDia(ans);if(q&&/^(true|t|dung|yes|1)$/.test(T)){a.tf=true;ok.push(t)}else if(q&&/^(false|f|sai|no|0)$/.test(T)){a.tf=false;ok.push(t)}else P.warns.push(`GameData dòng ${n}: bỏ TrueFalse (Answer phải là TRUE/FALSE).`)}
+   else if(t==="fix"){if(q&&ans&&!/^[A-D]$/i.test(ans)){a.fix=ans;ok.push(t)}else P.warns.push(`GameData dòng ${n}: bỏ FixMistake (cần câu sai và câu đúng).`)}}
+  if(!ok.length)return;P.seen.g.add(l.id);const img=V_(o,"imageurl");
+  P.items.push({id:uid("i"),lesson:l.id,src:"g",types:ok,q,opts:raw4.filter(Boolean),odd:odd4.filter(Boolean),a,raw:ans,sentence,chunks:chunks.length>1?chunks:[],hint:V_(o,"hint"),expl:V_(o,"explanation"),img:/^https?:/i.test(img)?img:""})});
+ each(/^matchpairs?/,(l,o,n)=>{const L=V_(o,"leftitem","left"),R=V_(o,"rightitem","right");if(!L||!R){P.errors.push(`MatchPairs, dòng ${n}: thiếu LeftItem hoặc RightItem.`);return}P.seen.p.add(l.id);P.pairs.push({lid:l.id,l:L,r:R,hint:V_(o,"hint")})});
+ each(/^(games|tro choi)$/,(l,o,n,name)=>{const ts=[];["game1","game2","game3","game4","game5"].forEach(k=>{const c=V_(o,k);if(!c)return;const t=gameFromCell(c);if(!t)P.warns.push(`Games, dòng ${n}: không hiểu “${c}”.`);else if(!ts.includes(t))ts.push(t)});if(ts.length)P.games.push({lid:l.id,types:ts})});
+ const nw={};P.words.forEach(w=>{if(!w.rev)nw[w.lid]=(nw[w.lid]||0)+1});Object.entries(nw).forEach(([k,v])=>{if(v>10)P.warns.push(`${lessonShort(k)}: ${v} từ khóa mới (nên 5–10).`)});
+ const nq={};P.items.forEach(x=>{if(x.src==="q")nq[x.lesson]=(nq[x.lesson]||0)+1});Object.entries(nq).forEach(([k,v])=>{if(v!==5)P.warns.push(`${lessonShort(k)}: ${v} câu Quiz (nên 5).`)});
  P.words.forEach(w=>{const o=DATA.words.find(x=>x.en.toLowerCase()===w.en.toLowerCase()&&x.lesson!==w.lid);if(o&&!w.rev&&!P.words.some(x=>x!==w&&x.lid===o.lesson&&x.en.toLowerCase()===w.en.toLowerCase()))P.warns.push(`“${w.en}” đã có ở “${lessonShort(o.lesson)}” → sẽ nhập thành từ ÔN TẬP.`)});
  return P}
 function applyPlan(P){let nw=0,uw=0,nr=0;
  P.words.forEach(w=>{const same=DATA.words.find(x=>x.lesson===w.lid&&x.en.toLowerCase()===w.en.toLowerCase());
   if(same){["ipa","vi","ex","def"].forEach(k=>{if(w[k])same[k]=w[k]});if(w.rev)same.rev=true;uw++}
-  else{const other=DATA.words.find(x=>x.en.toLowerCase()===w.en.toLowerCase());const rev=w.rev||!!other;if(rev&&!w.rev)nr++;DATA.words.push({id:uid("w"),lesson:w.lid,en:w.en,ipa:w.ipa,vi:w.vi,ex:w.ex,def:w.def,img:"",audio:"",rev});nw++}});
- const sl=new Set(P.sents.map(s=>s.lid));sl.forEach(lid=>{const old=ls(lid);DATA.sents=DATA.sents.filter(s=>s.lesson!==lid);P.sents.filter(s=>s.lid===lid).forEach((s,i)=>DATA.sents.push({id:uid("s"),lesson:lid,en:s.en,vi:s.vi,audio:old[i]&&old[i].en===s.en?old[i].audio||"":(old[i]?old[i].audio||"":"")}))});
- P.listen.forEach(c=>{const old=DATA.listen[c.lid]||{};const hide=c.hide||autoHide(c.text,c.lid);DATA.listen[c.lid]={title:c.title,text:c.text,hide,maxPlays:c.maxPlays,rate:old.rate||1,bank:old.bank!==false,hint:old.hint!==false,showAns:!!old.showAns,audio:old.audio||""}});
- new Set(P.quiz.map(q=>q.lid)).forEach(lid=>{DATA.quiz[lid]=P.quiz.filter(q=>q.lid===lid).map(q=>q.line).join("\n")});
- P.games.forEach(x=>{const old=Array.isArray(DATA.games[x.lid])?DATA.games[x.lid]:[];DATA.games[x.lid]=x.types.map(t=>{const o=old.find(y=>y.type===t);return o||{type:t,cfg:gcfgDefault(t)}})});
+  else{const other=DATA.words.find(x=>x.en.toLowerCase()===w.en.toLowerCase()),rev=w.rev||!!other;if(rev&&!w.rev)nr++;DATA.words.push({id:uid("w"),lesson:w.lid,en:w.en,ipa:w.ipa,vi:w.vi,ex:w.ex,def:w.def,img:"",audio:"",rev});nw++}});
+ new Set(P.sents.map(s=>s.lid)).forEach(lid=>{const old=ls(lid);DATA.sents=DATA.sents.filter(s=>s.lesson!==lid);P.sents.filter(s=>s.lid===lid).forEach((s,i)=>DATA.sents.push({id:uid("s"),lesson:lid,en:s.en,vi:s.vi,chunks:s.chunks,audio:old[i]?old[i].audio||"":""}))});
+ P.listen.forEach(c=>{const old=DATA.listen[c.lid]||{};const hide=c.hide||autoHide(c.text,c.lid);const clips=Object.assign({},old.clips||{},c.clips||{});DATA.listen[c.lid]={title:c.title,text:c.text,hide,maxPlays:c.maxPlays,rate:old.rate||1,bank:old.bank!==false,hint:old.hint!==false,showAns:!!old.showAns,audio:old.audio||"",clips}});
+ ["q","g"].forEach(src=>P.seen[src].forEach(lid=>{DATA.items[lid]=(DATA.items[lid]||[]).filter(x=>(x.src||"m")!==src)}));
+ P.items.forEach(x=>{(DATA.items[x.lesson]||(DATA.items[x.lesson]=[])).push(x)});
+ P.seen.p.forEach(lid=>{DATA.pairs[lid]=P.pairs.filter(p=>p.lid===lid).map(p=>({l:p.l,r:p.r,hint:p.hint}))});
+ P.games.forEach(x=>{const old=Array.isArray(DATA.games[x.lid])?DATA.games[x.lid]:[];DATA.games[x.lid]=x.types.map(t=>old.find(y=>y.type===t)||{type:t,cfg:gcfgDefault(t)})});
  save();return{nw,uw,nr}}
 E.xlsPick=async el=>{const f=el.files[0];el.value="";if(!f)return;if(!/\.xlsx$/i.test(f.name))return toast("Hãy chọn tệp .xlsx (Excel). Tệp .xls cũ: mở và “Lưu thành” .xlsx.","err");
  try{PLAN=await readPlan(f);PLAN.name=f.name;E.admin()}catch(e){console.error(e);toast("Không đọc được tệp: "+e.message,"err")}};
-E.planApply=()=>{if(!PLAN)return;const r=applyPlan(PLAN);toast(`✅ Đã nhập: ${r.nw} từ mới, ${r.uw} từ cập nhật${r.nr?`, ${r.nr} từ ôn tập`:""}, ${PLAN.sents.length} câu, ${PLAN.listen.length} bài nghe, ${PLAN.quiz.length} câu quiz, ${PLAN.games.length} bài chọn game`);PLAN=null;E.admin()};
+E.planApply=()=>{if(!PLAN)return;const P=PLAN,r=applyPlan(P);toast(`✅ Đã nhập: ${r.nw} từ mới${r.uw?`, ${r.uw} từ cập nhật`:""}${r.nr?`, ${r.nr} từ ôn tập`:""}, ${P.sents.length} câu, ${P.listen.length} bài nghe, ${P.items.length} mục Quiz/GameData, ${P.pairs.length} cặp ghép`);PLAN=null;E.admin()};
 E.planCancel=()=>{PLAN=null;E.admin()};
 
-/* ---- ghép ảnh / audio theo tên tệp ---- */
+/* ---- ghép ảnh / audio / video theo tên tệp ---- */
 let MEDIA=[];
-const isImg=f=>/^image\//.test(f.type)||/\.(png|jpe?g|gif|webp|bmp)$/i.test(f.name),isAud=f=>/^audio\//.test(f.type)||/\.(mp3|wav|m4a|ogg|oga|aac)$/i.test(f.name);
+const isImg=f=>/^image\//.test(f.type)||/\.(png|jpe?g|gif|webp|bmp)$/i.test(f.name),isAud=f=>/^audio\//.test(f.type)||/\.(mp3|wav|m4a|ogg|oga|aac)$/i.test(f.name),isVid=f=>/^video\//.test(f.type)||/\.(mp4|webm|mov|m4v)$/i.test(f.name);
 function matchFile(f,lessonId){const base=f.name.replace(/\.[^.]+$/,"");let b=slug(base),lid=lessonId,pref="";
  const m=/^b(\d+)-(.+)$/.exec(b);if(m){const l=lessonByNo(AS.g,m[1]);if(!l)return{f,ok:false,why:`Không có bài số ${m[1]}`};lid=l.id;b=m[2];pref=` (bài ${m[1]})`}
  if(!lid)return{f,ok:false,why:"Chưa chọn bài (hoặc đặt tên B3_từ.jpg)"};
- const img=isImg(f),aud=isAud(f);if(!img&&!aud)return{f,ok:false,why:"Không phải ảnh/audio"};
- const ws=lw(lid),sn=ls(lid);let k;
- if(aud&&/^(nghe|listen|listening|doan-van|passage|reading|bai-doc|doc|audio)$/.test(b)){return DATA.listen[lid]?{f,ok:true,t:{k:"listen",lid},desc:`Audio bài nghe${pref}`}:{f,ok:false,why:"Bài này chưa có hoạt động Nghe & điền từ"}}
+ const img=isImg(f),aud=isAud(f),vid=isVid(f);if(!img&&!aud&&!vid)return{f,ok:false,why:"Không phải ảnh/audio/video"};
+ const ws=lw(lid),sn=ls(lid),c=DATA.listen[lid];let k;
+ const clip=n=>c?(n>=1&&n<=Math.max(5,(c.hide||[]).length)?{f,ok:true,t:{k:"clip",lid,n},desc:`Clip chỗ trống số ${n} của bài nghe${pref}`}:{f,ok:false,why:"Số chỗ trống không hợp lệ"}):{f,ok:false,why:"Bài này chưa có hoạt động Nghe & điền từ"};
+ if((aud||vid)&&(k=/^(?:nghe|listen|listening|o|blank|clip|cho)-?(\d+)$/.exec(b)))return clip(+k[1]);
+ if(vid&&(k=/^(\d+)$/.exec(b)))return clip(+k[1]);
+ if(aud&&/^(nghe|listen|listening|doan-van|passage|reading|bai-doc|doc|audio)$/.test(b))return c?{f,ok:true,t:{k:"listen",lid},desc:`Audio cả đoạn nghe${pref}`}:{f,ok:false,why:"Bài này chưa có hoạt động Nghe & điền từ"};
+ if(vid)return{f,ok:false,why:"Video: đặt tên nghe1…nghe5 hoặc 1…5"};
  if((k=/^(?:t|tu|w|word)-?(\d+)$/.exec(b))||(img&&(k=/^(\d+)$/.exec(b)))){const n=+k[1],w=ws[n-1];return w?{f,ok:true,t:{k:img?"wimg":"waud",id:w.id},desc:`${img?"Hình":"Audio"} của từ ${n}: ${w.en}${pref}`}:{f,ok:false,why:`Bài chỉ có ${ws.length} từ`}}
  if(aud&&(k=/^(?:c|cau|s|sent|sentence)?-?(\d+)$/.exec(b))){const n=+k[1],s=sn[n-1];return s?{f,ok:true,t:{k:"saud",id:s.id},desc:`Audio mẫu câu ${n}: “${s.en.slice(0,28)}…”${pref}`}:{f,ok:false,why:`Bài chỉ có ${sn.length} mẫu câu`}}
  const w=ws.find(x=>slug(x.en)===b);if(w)return{f,ok:true,t:{k:img?"wimg":"waud",id:w.id},desc:`${img?"Hình":"Audio"} của từ “${w.en}”${pref}`};
  return{f,ok:false,why:"Tên không khớp từ khóa nào của bài"+(pref||" đã chọn")}}
 E.mediaPick=el=>{MEDIA=[...el.files].map(f=>matchFile(f,AS.lesson));el.value="";E.admin()};
-E.mediaApply=async()=>{let n=0;const ok=MEDIA.filter(m=>m.ok);const btn=G("mapply");
+E.mediaApply=async()=>{let n=0;const ok=MEDIA.filter(m=>m.ok),btn=G("mapply");
  for(let i=0;i<ok.length;i++){const m=ok[i],t=m.t;if(btn)btn.textContent=`⏳ ${i+1}/${ok.length}…`;
-  try{if(t.k==="wimg"){wById(t.id).img=await shrinkImage(await readDataURL(m.f),560,.8)}
-   else{const d=await readDataURL(m.f);if(t.k==="waud")wById(t.id).audio=d;else if(t.k==="saud")DATA.sents.find(s=>s.id===t.id).audio=d;else if(t.k==="listen")DATA.listen[t.lid].audio=d}n++}catch(e){console.warn(e)}}
+  try{if(t.k==="wimg")wById(t.id).img=await shrinkImage(await readDataURL(m.f),560,.8);
+   else{const d=await readDataURL(m.f);if(t.k==="waud")wById(t.id).audio=d;else if(t.k==="saud")DATA.sents.find(s=>s.id===t.id).audio=d;else if(t.k==="listen")DATA.listen[t.lid].audio=d;else if(t.k==="clip"){const c=DATA.listen[t.lid];c.clips=c.clips||{};c.clips[t.n]=d}}n++}catch(e){console.warn(e)}}
  save();MEDIA=[];toast(`✅ Đã ghép ${n}/${ok.length} tệp`);E.admin()};
 E.mediaCancel=()=>{MEDIA=[];E.admin()};
 
 /* ---- giao diện tab Nhập nhanh ---- */
-function importAdm(l){const P=PLAN;
- const planUI=P?`<div class="card" style="border:2px solid #86efac"><h3>🔍 Xem trước: ${esc(P.name)}</h3><p>Áp dụng cho <b>${esc(gName(P.g))}</b> · ${P.lessons.size} bài: <b>${P.words.length}</b> từ khóa · <b>${P.sents.length}</b> mẫu câu · <b>${P.listen.length}</b> bài nghe · <b>${P.quiz.length}</b> câu quiz · <b>${P.games.length}</b> bài chọn game.</p>
-  ${P.errors.length?`<div class="efb hint"><b>${P.errors.length} lỗi (các dòng này sẽ bị bỏ qua):</b><br>${P.errors.slice(0,12).map(esc).join("<br>")}</div>`:""}${P.warns.length?`<div class="efb hint"><b>Lưu ý:</b><br>${P.warns.slice(0,12).map(esc).join("<br>")}</div>`:""}
-  <div class="row" style="margin-top:8px"><button class="btn" onclick="ESL.planApply()" ${P.words.length+P.sents.length+P.listen.length+P.quiz.length+P.games.length?"":"disabled"}>✅ Nhập vào hệ thống</button><button class="btn sec" onclick="ESL.planCancel()">Hủy</button></div></div>`:"";
+function importAdm(l){const P=PLAN,cnt={};if(P)P.items.forEach(x=>x.types.forEach(t=>cnt[t]=(cnt[t]||0)+1));
+ const planUI=P?`<div class="card" style="border:2px solid #86efac"><h3>🔍 Xem trước: ${esc(P.name)}</h3><p>Áp dụng cho <b>${esc(gName(P.g))}</b> · ${P.lessons.size} bài: <b>${P.words.length}</b> từ khóa · <b>${P.sents.length}</b> mẫu câu · <b>${P.listen.length}</b> bài nghe · <b>${P.items.filter(x=>x.src==="q").length}</b> câu Quiz · GameData: ${Object.entries(cnt).filter(([t])=>t!=="quiz"||P.items.some(x=>x.src==="g"&&x.types.includes("quiz"))).map(([t,v])=>`${t} ${v}`).join(", ")||"0"} · <b>${P.pairs.length}</b> cặp ghép · <b>${P.games.length}</b> bài chọn game.</p>
+  ${P.errors.length?`<div class="efb hint"><b>${P.errors.length} lỗi (các dòng này bị bỏ qua):</b><br>${P.errors.slice(0,12).map(esc).join("<br>")}</div>`:""}${P.warns.length?`<div class="efb hint"><b>Lưu ý:</b><br>${P.warns.slice(0,14).map(esc).join("<br>")}</div>`:""}
+  <div class="row" style="margin-top:8px"><button class="btn" onclick="ESL.planApply()" ${P.words.length+P.sents.length+P.listen.length+P.items.length+P.pairs.length+P.games.length?"":"disabled"}>✅ Nhập vào hệ thống</button><button class="btn sec" onclick="ESL.planCancel()">Hủy</button></div></div>`:"";
  const mUI=MEDIA.length?`<div class="card" style="border:2px solid #86efac"><h3>🔍 Xem trước ghép tệp</h3><div style="max-height:300px;overflow:auto"><table class="t"><tr><th>Tệp</th><th>Sẽ ghép vào</th></tr>${MEDIA.map(m=>`<tr><td>${esc(m.f.name)}</td><td>${m.ok?`✅ ${esc(m.desc)}`:`<span class="bad2">⚠ ${esc(m.why)}</span>`}</td></tr>`).join("")}</table></div><div class="row" style="margin-top:8px"><button class="btn" id="mapply" onclick="ESL.mediaApply()" ${MEDIA.some(m=>m.ok)?"":"disabled"}>✅ Ghép ${MEDIA.filter(m=>m.ok).length} tệp</button><button class="btn sec" onclick="ESL.mediaCancel()">Hủy</button></div></div>`:"";
- return `<p class="muted">Soạn học liệu nhanh: <b>1 tệp Excel cho cả lớp</b> + <b>chọn nhiều ảnh/audio một lần</b>. Đang làm việc với <b>${esc(gName(AS.g))}</b>${l?` · bài đã chọn: <b>${esc(lessonShort(l.id))}</b>`:""}.</p>
+ return `<p class="muted">Soạn học liệu nhanh: <b>1 workbook Excel cho cả lớp</b> + <b>chọn nhiều ảnh/audio/video một lần</b>. Đang làm việc với <b>${esc(gName(AS.g))}</b>${l?` · bài đã chọn: <b>${esc(lessonShort(l.id))}</b>`:""}.</p>
  ${planUI}${mUI}
- <div class="grid2"><div class="card"><h3>① Excel – từ khóa, mẫu câu, bài nghe, quiz, chọn game</h3><ol class="muted" style="margin:0 0 8px 18px;padding:0"><li>Tải mẫu Excel của ${esc(gName(AS.g))} (có sẵn danh mục bài).</li><li>Điền các trang cần dùng (mỗi dòng ghi số bài).</li><li>Tải lên – xem trước – bấm “Nhập vào hệ thống”.</li></ol><div class="row"><button class="btn" onclick="ESL.tplXlsx()">⬇ Tải mẫu Excel</button><button class="btn blue" onclick="G_('xlsIn').click()">📤 Tải Excel lên</button><button class="btn sec" onclick="ESL.exportXlsx()">📑 Xuất nội dung hiện có ra Excel</button><input type="file" id="xlsIn" accept=".xlsx" class="hidden" onchange="ESL.xlsPick(this)"></div><p class="muted" style="font-size:13px;margin-top:8px">Nhập lại nhiều lần an toàn: từ khóa được cập nhật, giữ nguyên hình/audio đã ghép. Có thể “Xuất ra Excel” → sửa hàng loạt → nhập lại.</p></div>
- <div class="card"><h3>② Ảnh &amp; audio – ghép tự động theo tên tệp</h3><p class="muted" style="margin:0 0 6px">Chọn <b>bài ở trên</b>, rồi chọn nhiều tệp một lần. Tên tệp quy ước:</p><table class="t" style="font-size:13px"><tr><th>Tên tệp</th><th>Ghép vào</th></tr>
- <tr><td><code>cell.jpg</code> · <code>cell.mp3</code></td><td>Hình / audio của từ <b>cell</b></td></tr><tr><td><code>1.jpg</code> … <code>10.jpg</code></td><td>Hình của từ thứ 1…10 trong bài</td></tr><tr><td><code>1.mp3</code> … <code>5.mp3</code></td><td>Audio của <b>mẫu câu</b> thứ 1…5</td></tr><tr><td><code>tu1.mp3</code> (hoặc <code>w1</code>)</td><td>Audio của từ thứ 1</td></tr><tr><td><code>nghe.mp3</code> (hoặc <code>listen</code>, <code>doan-van</code>)</td><td>Audio <b>đoạn nghe &amp; điền từ</b></td></tr><tr><td><code>B3_cell.jpg</code></td><td>Từ cell của <b>bài 3</b> (không cần chọn bài)</td></tr></table>
- <div class="row" style="margin-top:8px"><button class="btn blue" onclick="G_('medIn').click()">🖼🎵 Chọn nhiều ảnh / audio</button><input type="file" id="medIn" accept="image/*,audio/*" multiple class="hidden" onchange="ESL.mediaPick(this)"></div><p class="muted" style="font-size:13px;margin-top:8px">Ảnh tự thu nhỏ cho nhẹ. Không có audio thì hệ thống tự đọc bằng giọng máy.</p></div></div>`}
+ <div class="grid2"><div class="card"><h3>① Excel – 5 mục của một bài ESL</h3><table class="t" style="font-size:13px;margin-bottom:8px"><tr><th>Trang</th><th>Nội dung</th></tr><tr><td><b>Keywords</b></td><td>5–10 từ khóa</td></tr><tr><td><b>Sentences</b></td><td>Mẫu câu (+ cụm từ để sắp xếp)</td></tr><tr><td><b>Listening</b></td><td>Đoạn văn 5 chỗ trống [ ] + link clip 1–5</td></tr><tr><td><b>Quiz</b></td><td>5 câu trắc nghiệm</td></tr><tr><td><b>GameData</b></td><td>Fill · Scramble · OddOneOut · TrueFalse · FixMistake · Quiz</td></tr><tr><td><b>MatchPairs</b></td><td>Ghép cặp</td></tr><tr><td><b>Games</b></td><td>Chọn game cho từng bài</td></tr></table><div class="row"><button class="btn" onclick="ESL.tplXlsx()">⬇ Tải mẫu Excel</button><button class="btn blue" onclick="G_('xlsIn').click()">📤 Tải Excel lên</button><button class="btn sec" onclick="ESL.exportXlsx()">📑 Xuất nội dung hiện có ra Excel</button><input type="file" id="xlsIn" accept=".xlsx" class="hidden" onchange="ESL.xlsPick(this)"></div><p class="muted" style="font-size:13px;margin-top:8px">Khung GameData/MatchPairs giữ đúng cột của file English Game Lab (thêm cột Lesson). Nhập lại nhiều lần an toàn, hình/audio đã ghép được giữ.</p></div>
+ <div class="card"><h3>② Ảnh, audio, video – ghép tự động theo tên tệp</h3><p class="muted" style="margin:0 0 6px">Chọn <b>bài ở trên</b>, rồi chọn nhiều tệp một lần:</p><table class="t" style="font-size:13px"><tr><th>Tên tệp</th><th>Ghép vào</th></tr>
+ <tr><td><code>cell.jpg</code> · <code>cell.mp3</code></td><td>Hình / audio của từ <b>cell</b></td></tr><tr><td><code>1.jpg</code> … <code>10.jpg</code></td><td>Hình của từ thứ 1…10</td></tr><tr><td><code>1.mp3</code> … <code>5.mp3</code></td><td>Audio <b>mẫu câu</b> thứ 1…5</td></tr><tr><td><code>nghe1.mp4</code> … <code>nghe5.mp4</code><br><code>1.mp4</code> … <code>5.mp4</code> (video)</td><td><b>Clip chỗ trống số 1…5</b> của bài nghe (audio hoặc video)</td></tr><tr><td><code>nghe.mp3</code></td><td>Audio cả đoạn nghe</td></tr><tr><td><code>B3_cell.jpg</code></td><td>Từ cell của <b>bài 3</b> (không cần chọn bài)</td></tr></table>
+ <div class="row" style="margin-top:8px"><button class="btn blue" onclick="G_('medIn').click()">🖼🎵🎬 Chọn nhiều tệp</button><input type="file" id="medIn" accept="image/*,audio/*,video/*" multiple class="hidden" onchange="ESL.mediaPick(this)"></div><p class="muted" style="font-size:13px;margin-top:8px">Video nặng làm tệp dữ liệu rất lớn: nên dùng clip ngắn hoặc dán link YouTube/Drive ở cột Link1–Link5. Không có clip thì máy đọc câu chứa chỗ trống.</p></div></div>`}
 
 /* ---------- kết thúc module ---------- */
 })();
