@@ -20,7 +20,7 @@
 .gh{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}.gtop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:16px}
 .gq{text-align:center;padding:10px}.gimg{max-width:260px;width:80%;max-height:200px;object-fit:cover;border-radius:14px;margin:0 auto;display:block}.gclue{font-size:21px;font-weight:800;margin:10px 0}.gmask{letter-spacing:4px;font-size:28px;color:#0284c7}.gdash{font-size:24px;letter-spacing:3px;margin:8px 0;color:#6b7280}
 .gtxt{border:2px solid #86efac;border-radius:10px;padding:10px 12px;font-size:18px;min-width:200px;max-width:100%}.gres{text-align:center;padding:20px 10px}.gstars{font-size:46px}.gsc{font-size:30px;font-weight:900;color:var(--ep);margin:6px 0}
-.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.mtile{border:3px solid #bbf7d0;border-radius:14px;background:#fff;overflow:hidden;cursor:pointer;text-align:center}.mtile img{width:100%;height:100px;object-fit:cover;display:block}.mtx{height:100px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;padding:6px;color:#b45309}.mslot{padding:6px;font-weight:900;background:#f0fdf4;min-height:32px}
+.oln{min-height:54px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;padding:10px;border:2px dashed #86efac;border-radius:12px;background:#f8fffa;margin-top:8px}.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.mtile{border:3px solid #bbf7d0;border-radius:14px;background:#fff;overflow:hidden;cursor:pointer;text-align:center}.mtile img{width:100%;height:100px;object-fit:cover;display:block}.mtx{height:100px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;padding:6px;color:#b45309}.mslot{padding:6px;font-weight:900;background:#f0fdf4;min-height:32px}
 .mtile.ok{border-color:#16a34a}.mtile.ok .mslot{background:#bbf7d0;color:#14532d}.mtile.rev .mslot{background:#fde68a}.mtile.shake{animation:eshake .45s;border-color:#f87171}
 @keyframes eshake{0%,100%{transform:none}20%{transform:translateX(-7px)}60%{transform:translateX(7px)}}
 .mbank{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;justify-content:center}
@@ -64,8 +64,8 @@ E.u={rnd,shuffle,pick,reEsc,uid,num};
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("khtn-esl",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
 async function idbSet(k,v){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
-const blank=()=>({app:"khtn-esl",v:1,savedAt:0,words:[],sents:[],games:{},listen:{},cfg:{voice:"",rate:.9}});
-function norm(d){const b=blank();d=d||{};return{app:"khtn-esl",v:1,savedAt:+d.savedAt||0,words:Array.isArray(d.words)?d.words:[],sents:Array.isArray(d.sents)?d.sents:[],games:d.games&&typeof d.games==="object"?d.games:{},listen:d.listen&&typeof d.listen==="object"?d.listen:{},cfg:Object.assign(b.cfg,d.cfg||{})}}
+const blank=()=>({app:"khtn-esl",v:1,savedAt:0,words:[],sents:[],games:{},listen:{},quiz:{},cfg:{voice:"",rate:.9}});
+function norm(d){const b=blank();d=d||{};return{app:"khtn-esl",v:1,savedAt:+d.savedAt||0,words:Array.isArray(d.words)?d.words:[],sents:Array.isArray(d.sents)?d.sents:[],games:d.games&&typeof d.games==="object"?d.games:{},listen:d.listen&&typeof d.listen==="object"?d.listen:{},quiz:d.quiz&&typeof d.quiz==="object"?d.quiz:{},cfg:Object.assign(b.cfg,d.cfg||{})}}
 let DATA=blank(),loaded=false,saveT=0;
 E.data=()=>DATA;
 E.loaded=()=>loaded;
@@ -94,10 +94,11 @@ const GAMEDEF={
  search:{name:"WORD SEARCH",icon:"🔠",vn:"Tìm từ trong bảng chữ",col:"#e0f2fe"},
  flip:{name:"FLIP & MATCH",icon:"🃏",vn:"Lật thẻ ghép cặp",col:"#fce7f3"},
  fill:{name:"FILL IN THE BLANKS",icon:"✍️",vn:"Điền từ vào câu",col:"#ede9fe"},
+ order:{name:"SENTENCE ORDER",icon:"🔀",vn:"Sắp xếp từ thành câu",col:"#fae8ff"},
  quiz:{name:"SCIENCE QUIZ",icon:"⚡",vn:"Trắc nghiệm nhanh",col:"#ffedd5"}};
-const GORDER=["match","guess","search","flip","fill","quiz"];
+const GORDER=["match","guess","search","flip","fill","order","quiz"];
 const GDEFAULT=["match","guess","flip"];
-const gcfgDefault=t=>({match:{n:6,pts:10,plays:0},guess:{n:6,pts:10,bonus:5,tries:3,plays:0},search:{n:8,pts:10,time:0,plays:0},flip:{n:6,pts:10,mode:"vi",plays:0},fill:{n:6,pts:10,mode:"bank",plays:0},quiz:{n:8,pts:10,time:0,qs:"",plays:0}})[t];
+const gcfgDefault=t=>({match:{n:6,pts:10,plays:0},guess:{n:6,pts:10,bonus:5,tries:3,plays:0},search:{n:8,pts:10,time:0,plays:0},flip:{n:6,pts:10,mode:"vi",plays:0},fill:{n:6,pts:10,mode:"bank",plays:0},order:{n:5,pts:10,plays:0},quiz:{n:8,pts:10,time:0,qs:"",plays:0}})[t];
 function gamesOf(lid){const g=DATA.games[lid];if(Array.isArray(g))return g.filter(x=>GAMEDEF[x.type]);return GDEFAULT.map(t=>({type:t,cfg:gcfgDefault(t),auto:true}))}
 E.GAMEDEF=GAMEDEF;E.GORDER=GORDER;E.gamesOf=gamesOf;E.gcfgDefault=gcfgDefault;
 
@@ -191,7 +192,7 @@ E.setSt=(id,v)=>{upd(S.lid,r=>{r.st[id]=v;if(!r.learned.includes(id))r.learned.p
 
 /* ---------- 2. USEFUL SENTENCES ---------- */
 function ssHTML(l){const ss=ls(l.id),ws=lw(l.id);if(!ss.length)return empty("Bài này chưa có mẫu câu. Con quay lại sau nhé!");
- return ss.map((s,i)=>{const x=S.ex[s.id]||{},cz=cloze(s.en,ws);
+ return `<div class="row" style="margin-bottom:8px"><button class="btn sm" onclick="ESL.playType('order')">🔀 Luyện sắp xếp từ thành câu</button></div>`+ss.map((s,i)=>{const x=S.ex[s.id]||{},cz=cloze(s.en,ws);
   return `<div class="ess"><div class="ent"><b class="esn">${i+1}</b><div class="esen">${hl(s.en,ws)}</div><button class="ebtn s" onclick="ESL.saySent('${s.id}')">🔊</button></div>
   <div class="row" style="margin-top:6px"><button class="btn sm sec" onclick="ESL.togVi('${s.id}')">${S.showVi[s.id]?"🙈 Ẩn nghĩa":"👁 Xem nghĩa"}</button>${cz?`<button class="btn sm blue" onclick="ESL.exOpen('${s.id}')">✍ Bài tập điền từ</button>`:""}</div>
   ${S.showVi[s.id]?`<div class="esvi">${esc(s.vi||"(chưa có nghĩa)")}</div>`:""}
@@ -216,8 +217,9 @@ function playHTML(l){const ws=lw(l.id);if(!ws.length)return empty("Bài này ch�
  return `<div class="ggrid">${gs.map((g,i)=>{const d=GAMEDEF[g.type],st=rc.games[g.type],lim=g.cfg.plays>0&&st&&st.plays>=g.cfg.plays&&!isTeacher();
   return `<div class="gcard" style="background:${d.col}"><div class="gic">${d.icon}</div><div class="gn">${d.name}</div><div class="gv">${d.vn}</div>${st?`<div class="gs">⭐ Cao nhất: <b>${st.best}/${st.max}</b> · ${st.plays} lần chơi</div>`:`<div class="gs">Chưa chơi</div>`}${g.cfg.plays>0?`<div class="gs">Số lượt: ${st?st.plays:0}/${g.cfg.plays}</div>`:""}<button class="btn" ${lim?"disabled":""} onclick="ESL.play(${i})">${lim?"Hết lượt":"▶ Chơi"}</button></div>`}).join("")}</div>`}
 E.play=i=>{S.game={idx:i};draw()};
+E.playType=t=>{S.tab="play";S.game={idx:-1,type:t};draw()};
 E.quit=()=>{stopSound();S.game=null;draw()};
-function gameStart(i){const l=findLesson(S.lid),gs=gamesOf(l.id),g=gs[i],box=G("gbox");if(!g||!box){S.game=null;return draw()}
+function gameStart(i){const l=findLesson(S.lid),gs=gamesOf(l.id),g=i>=0?gs[i]:(S.game&&S.game.type?{type:S.game.type,cfg:gcfgDefault(S.game.type)}:null),box=G("gbox");if(!g||!box){S.game=null;return draw()}
  const all=lw(l.id),sel=g.cfg.words&&g.cfg.words.length?all.filter(w=>g.cfg.words.includes(w.id)):all,words=sel.length?sel:all;
  const d=GAMEDEF[g.type];
  box.innerHTML=`<div class="gh"><button class="btn sm sec" onclick="ESL.quit()">⬅ Chọn game khác</button><b>${d.icon} ${d.name}</b></div><div id="gin"></div>`;
@@ -399,7 +401,7 @@ GAMES.fill=function(box,ctx){const pts=ctx.pts,mode=ctx.cfg.mode||"bank",ss=ls(c
 GAMES.quiz=function(box,ctx){const pts=ctx.pts,n=num(ctx.cfg.n,8,5,10),tm=num(ctx.cfg.time,0,0,120),W=ctx.all.length>=2?ctx.all:DATA.words;
  const others=(w,f)=>{const pool=[...new Set(W.filter(x=>x.id!==w.id).map(f).filter(Boolean))],more=[...new Set(DATA.words.filter(x=>x.id!==w.id).map(f).filter(Boolean))];return pick([...new Set([...pool,...shuffle(more)])],3)};
  const qs=[];
- String(ctx.cfg.qs||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const p=l.split("|").map(x=>x.trim()).filter(Boolean);if(p.length>=3)qs.push({q:p[0],img:"",ans:p[1],opts:shuffle(p.slice(1)),ex:""})});
+ String((ctx.cfg.qs||"")+"\n"+(DATA.quiz[ctx.lesson.id]||"")).split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const p=l.split("|").map(x=>x.trim()).filter(Boolean);if(p.length>=3)qs.push({q:p[0],img:"",ans:p[1],opts:shuffle(p.slice(1)),ex:""})});
  ctx.words.forEach(w=>{const t=[];
   if(w.img)t.push({q:"What is this? (Đây là gì?)",img:w.img,ans:w.en,opts:shuffle([w.en,...others(w,x=>x.en)]),w});
   t.push({q:`“${w.vi}” trong tiếng Anh là gì?`,ans:w.en,opts:shuffle([w.en,...others(w,x=>x.en)]),w});
@@ -422,23 +424,50 @@ GAMES.quiz=function(box,ctx){const pts=ctx.pts,n=num(ctx.cfg.n,8,5,10),tm=num(ct
   if(tm)timer=setInterval(()=>{if(!alive(box))return clearInterval(timer);left--;const e=box.querySelector("#qtm");if(e)e.textContent="⏱ "+Math.max(0,left)+"s";if(left<=0)answer(null)},1000)}
  round()};
 
+/* ===== GAME 7 – SENTENCE ORDER (sắp xếp từ thành câu) ===== */
+GAMES.order=function(box,ctx){const pts=ctx.pts;
+ let items=ls(ctx.lesson.id).map(s=>({en:s.en.trim(),vi:s.vi,w:null}));
+ if(items.length<3)ctx.words.filter(w=>w.ex).forEach(w=>{if(!items.some(x=>x.en===w.ex.trim()))items.push({en:w.ex.trim(),vi:w.vi,w})});
+ items=pick(items.filter(x=>x.en.split(/\s+/).length>=3),num(ctx.cfg.n,5,1,12));
+ if(!items.length){box.innerHTML=`<div class="empty">Bài này chưa có mẫu câu (từ 3 từ trở lên) để chơi sắp xếp.</div>`;return}
+ let i=0,score=0;
+ function round(){if(!alive(box))return;if(i>=items.length)return ctx.finish(score,items.length*pts);
+  const it=items[i],toks=it.en.split(/\s+/);let order=shuffle(toks.map((_,k)=>k)),tries=0;
+  for(let t=0;t<20&&order.every((v,k)=>v===k);t++)order=shuffle(order);
+  let placed=[],locked=0;const done={v:false};
+  const draw2=()=>{box.querySelector("#oln").innerHTML=placed.length?placed.map((k,n)=>`<button class="chip ${n<locked?"used":"sel"}" data-n="${n}">${esc(toks[k])}</button>`).join(""):`<span class="muted">Chạm vào các từ bên dưới theo đúng thứ tự…</span>`;
+   box.querySelector("#obk").innerHTML=order.filter(k=>!placed.includes(k)).map(k=>`<button class="chip" data-k="${k}">${esc(toks[k])}</button>`).join("")};
+  box.innerHTML=SHELL(score,`<span class="muted">Câu ${i+1}/${items.length}</span>`)+`<div class="gq"><div class="gclue" style="font-size:18px">🇻🇳 ${esc(it.vi||"Sắp xếp các từ thành câu đúng")}</div><div class="oln" id="oln"></div><div class="row" style="justify-content:center;margin-top:10px" id="obk"></div>
+   <div class="row" style="justify-content:center;margin-top:12px"><button class="btn" id="ock">✔ Kiểm tra</button><button class="btn sec" id="orst">↺ Làm lại câu này</button></div></div><div class="gfb efb hint">Chạm từ để đưa lên dòng trên; chạm lại để gỡ xuống.</div>`;
+  draw2();
+  box.onclick=e=>{if(done.v)return;const b=e.target.closest(".chip");if(!b)return;
+   if(b.dataset.k!=null){placed.push(+b.dataset.k);draw2()}
+   else if(b.dataset.n!=null){const n=+b.dataset.n;if(n<locked)return;placed.splice(n,1);draw2()}};
+  box.querySelector("#orst").onclick=()=>{if(done.v)return;placed=placed.slice(0,locked);draw2()};
+  box.querySelector("#ock").onclick=()=>{if(done.v)return;if(placed.length<toks.length)return fbox(box,"Con hãy đặt đủ tất cả các từ nhé 🌱","hint");
+   const got=placed.map(k=>toks[k]).join(" ");tries++;
+   if(cmp(got,it.en)){done.v=true;const g=tries===1?pts:tries===2?pts*.5:pts*.25;score+=g;setSc(box,score);fbox(box,`🎉 Chính xác! ${esc(it.en)}`,"good");say(it.en);i++;setTimeout(round,1800)}
+   else if(tries>=3){done.v=true;placed=toks.map((_,k)=>k);locked=toks.length;draw2();fbox(box,`📖 Câu đúng là: <b>${esc(it.en)}</b><br>Không sao đâu, con chơi lại để nhớ thêm nhé!`,"hint");i++;setTimeout(round,3000)}
+   else{const n=tries===1?1:2;locked=0;placed=[];for(let k=0;k<n;k++)placed.push(k);locked=n;draw2();fbox(box,KIND[tries-1]+`<br>💡 Gợi ý ${tries}: câu bắt đầu bằng “<b>${esc(toks.slice(0,n).join(" "))}</b>”. Mình đã đặt sẵn giúp con.`,"hint")}}}
+ round()};
+
 /* =====================================================================
    KHU QUẢN TRỊ ESL (ESL CONTENT MANAGER) – chỉ giáo viên thấy
    ===================================================================== */
 const AS={g:null,lesson:null,tab:"v",all:false,rep:"student",repClass:"",repQ:"",repTest:false};
 E.AS=AS;
-const ATABS=[["v","📚 Từ khóa"],["s","💬 Mẫu câu"],["g","🎮 Trò chơi"],["l","🎧 Nghe & điền từ"],["p","👁 Xem trước"],["r","📊 Báo cáo"],["d","💾 Dữ liệu"]];
+const ATABS=[["i","📥 Nhập nhanh"],["v","📚 Từ khóa"],["s","💬 Mẫu câu"],["g","🎮 Trò chơi"],["l","🎧 Nghe & điền từ"],["p","👁 Xem trước"],["r","📊 Báo cáo"],["d","💾 Dữ liệu"]];
 const lessonOpts=()=>chaptersOf(AS.g).map(c=>`<optgroup label="${esc(c.name)}">${c.lessons.map(l=>`<option value="${l.id}" ${l.id===AS.lesson?"selected":""}>Bài ${l.no}. ${esc(l.name)} (${lw(l.id).filter(w=>!w.rev).length} từ)</option>`).join("")}</optgroup>`).join("");
 E.admin=function(){E.preview=false;
  if(!loaded){G("main").innerHTML=`<div class="card"><div class="empty">⏳ Đang tải dữ liệu ESL…</div></div>`;E.ready.then(()=>{if(V.name==="adm"&&V.adm==="esl")E.admin()});return}
  if(!AS.g)AS.g=V.g||GR[0][0];
  if(AS.lesson&&!findLesson(AS.lesson))AS.lesson=null;
- const tabNeedsLesson=["v","s","g","l","p"].includes(AS.tab),l=AS.lesson?findLesson(AS.lesson):null;
+ const tabNeedsLesson=["v","s","g","l","p"].includes(AS.tab),showSel=tabNeedsLesson||AS.tab==="i",l=AS.lesson?findLesson(AS.lesson):null;
  const dirty=Number(localStorage.getItem(KEY_EDIT)||0)>Number(localStorage.getItem(KEY_PUB)||0)&&(DATA.words.length||DATA.sents.length);
  G("main").innerHTML=`<div class="card esl"><h2>🔤 SCIENCE ESL – Quản lý nội dung</h2>${dirty?`<div class="efb hint" style="margin-bottom:8px">⚠ Nội dung ESL có thay đổi CHƯA xuất bản. Vào tab <b>💾 Dữ liệu</b> → “Tải esl-data.json” rồi tải lên GitHub cùng thư mục với index.html.</div>`:""}
- <div class="row" style="margin-bottom:10px">${gradeSeg(AS.g,"ESL.pickGrade")}${tabNeedsLesson?`<select id="esLs" onchange="ESL.pickLesson(this.value)" style="min-width:230px;max-width:100%"><option value="">— Chọn bài học —</option>${lessonOpts()}</select>`:""}</div>
+ <div class="row" style="margin-bottom:10px">${gradeSeg(AS.g,"ESL.pickGrade")}${showSel?`<select id="esLs" onchange="ESL.pickLesson(this.value)" style="min-width:230px;max-width:100%"><option value="">— Chọn bài học —</option>${lessonOpts()}</select>`:""}</div>
  <div class="tabs" style="margin-bottom:10px">${ATABS.map(([k,n])=>`<button class="${AS.tab===k?"on":""}" onclick="ESL.admTab('${k}')">${n}</button>`).join("")}</div>
- <div id="eadm">${tabNeedsLesson&&!l?`<div class="empty">Hãy chọn lớp và bài học ở trên để soạn nội dung ESL.</div>`:AS.tab==="v"?vocabAdm(l):AS.tab==="s"?sentAdm(l):AS.tab==="g"?gameAdm(l):AS.tab==="l"?listenAdm(l):AS.tab==="p"?`<div id="eslpv"></div>`:AS.tab==="r"?reportAdm():dataAdm()}</div></div>`;
+ <div id="eadm">${tabNeedsLesson&&!l?`<div class="empty">Hãy chọn lớp và bài học ở trên để soạn nội dung ESL.</div>`:AS.tab==="i"?importAdm(l):AS.tab==="v"?vocabAdm(l):AS.tab==="s"?sentAdm(l):AS.tab==="g"?gameAdm(l):AS.tab==="l"?listenAdm(l):AS.tab==="p"?`<div id="eslpv"></div>`:AS.tab==="r"?reportAdm():dataAdm()}</div></div>`;
  if(AS.tab==="p"&&l){E.lesson(l,G("eslpv"),true)}
  if(AS.tab==="l"&&l)lsBindTokens()};
 E.pickGrade=g=>{AS.g=g;AS.lesson=null;E.admin()};
@@ -501,10 +530,10 @@ E.sBulk=()=>modal(`<h3>📝 Thêm nhiều câu</h3><p class="muted">Mỗi dòng 
 E.sBulkSave=()=>{let n=0;G("sbk").value.split(/\r?\n/).forEach(l=>{const p=l.split(/\s*\|\s*|\t/);if(p[0]&&p[0].trim()){DATA.sents.push({id:uid("s"),lesson:AS.lesson,en:p[0].trim(),vi:(p[1]||"").trim(),audio:""});n++}});save();closeModal();toast(`✅ Đã thêm ${n} câu`);reload()};
 
 /* ---------- 3. Game Manager ---------- */
-const GF={match:["n","pts","plays"],guess:["n","pts","bonus","tries","plays"],search:["n","pts","time","plays"],flip:["n","pts","mode","plays"],fill:["n","pts","mode","plays"],quiz:["n","pts","time","plays","qs"]};
+const GF={order:["n","pts","plays"],match:["n","pts","plays"],guess:["n","pts","bonus","tries","plays"],search:["n","pts","time","plays"],flip:["n","pts","mode","plays"],fill:["n","pts","mode","plays"],quiz:["n","pts","time","plays","qs"]};
 const GL={n:["Số câu / cặp / từ",1,15],pts:["Điểm mỗi câu",1,100],bonus:["Điểm thưởng (đúng lần 1)",0,50],tries:["Số lần đoán",1,6],plays:["Số lượt chơi tối đa (0 = không giới hạn)",0,99],time:["Thời gian (giây, 0 = không tính giờ)",0,3600]};
-function gameAdm(l){const ws=lw(l.id),cur=gamesOf(l.id),auto=cur.length&&cur[0].auto,byT=Object.fromEntries(cur.map(g=>[g.type,g]));
- return `<p class="muted">Chọn khoảng 3 trò chơi cho bài ${l.no}. ${auto?"<b>Đang dùng bộ game mặc định</b> – bấm Lưu để cố định lựa chọn của thầy/cô.":""} Game dùng chung thư viện, không cần viết lại code.</p>
+function gameAdm(l){const ws=lw(l.id),nq=(DATA.quiz[l.id]||"").split(/\r?\n/).filter(x=>x.trim()).length,cur=gamesOf(l.id),auto=cur.length&&cur[0].auto,byT=Object.fromEntries(cur.map(g=>[g.type,g]));
+ return `<p class="muted">Chọn khoảng 3 trò chơi cho bài ${l.no}. ${auto?"<b>Đang dùng bộ game mặc định</b> – bấm Lưu để cố định lựa chọn của thầy/cô.":""} Game dùng chung thư viện, không cần viết lại code.${nq?` Bài này có <b>${nq}</b> câu quiz nhập từ Excel (tự dùng trong Science Quiz).`:""}</p>
  ${GORDER.map(t=>{const d=GAMEDEF[t],g=byT[t],cfg=Object.assign({},gcfgDefault(t),g?g.cfg:{});
   return `<details class="gadm" ${g?"open":""}><summary><label><input type="checkbox" id="g_${t}_on" ${g?"checked":""} onclick="event.stopPropagation()"> ${d.icon} <b>${d.name}</b> – ${d.vn}</label></summary><div class="gfl">
   ${GF[t].map(f=>f==="mode"?`<div class="fg"><label>Kiểu thẻ</label><select id="g_${t}_mode">${(t==="flip"?[["vi","English – Tiếng Việt"],["img","English – Hình"],["def","English – Mô tả"],["mix","Trộn các kiểu"]]:[["bank","Chọn / kéo từ trong ngân hàng từ"],["type","Nhập trực tiếp từ"]]).map(([v,n])=>`<option value="${v}" ${cfg.mode===v?"selected":""}>${n}</option>`).join("")}</select></div>`:f==="qs"?`<div class="fg" style="grid-column:1/-1"><label>Câu hỏi tự soạn (không bắt buộc) – mỗi dòng: <code>Câu hỏi | đáp án ĐÚNG | sai 1 | sai 2 | sai 3</code></label><textarea id="g_${t}_qs" style="width:100%;min-height:80px">${esc(cfg.qs||"")}</textarea></div>`:`<div class="fg"><label>${GL[f][0]}</label><input type="number" id="g_${t}_${f}" value="${cfg[f]}" min="${GL[f][1]}" max="${GL[f][2]}"></div>`).join("")}
@@ -517,7 +546,7 @@ E.gSave=()=>{const out=[];GORDER.forEach(t=>{if(!G("g_"+t+"_on").checked)return;
 /* ---------- 4. Listening Manager ---------- */
 function listenAdm(l){const c=DATA.listen[l.id]||{title:"Listen and fill in the blanks",text:"",hide:[],bank:true,hint:true,showAns:false,maxPlays:0,rate:1};TMP={img:"",audio:c.audio||""};LC=JSON.parse(JSON.stringify(Object.assign({hide:[]},c,{audio:undefined})));
  return `<p class="muted">Đoạn văn khoảng 3–5 câu, dùng từ khóa và mẫu câu của bài. Chọn từ cần ẩn bằng cách bấm vào từ.</p>
- ${fld("Tiêu đề hoạt động",`<input type="text" id="lft" style="width:100%" value="${esc(c.title||"")}">`)}${fld("Đoạn văn",`<textarea id="lfx" style="width:100%;min-height:110px" oninput="ESL.lsText()">${esc(c.text||"")}</textarea>`)}
+ ${fld("Tiêu đề hoạt động",`<input type="text" id="lft" style="width:100%" value="${esc(c.title||"")}">`)}${fld("Đoạn văn <button class='btn sm sec' type='button' onclick='ESL.lsFromSents()'>✨ Tạo từ các mẫu câu của bài</button>",`<textarea id="lfx" style="width:100%;min-height:110px" oninput="ESL.lsText()">${esc(c.text||"")}</textarea>`)}
  <div class="fg"><label>Bấm vào từ để ẩn / hiện (từ ẩn = ô trống)</label><div id="lftok" class="lftok"></div><div class="row" style="margin-top:6px"><button class="btn sm blue" onclick="ESL.lsAuto()">✨ Tự ẩn các từ khóa của bài</button><button class="btn sm sec" onclick="ESL.lsClear()">Bỏ ẩn hết</button></div></div>
  <div class="gfl"><div class="fg"><label>Số lần nghe tối đa (0 = không giới hạn)</label><input type="number" id="lfm" value="${c.maxPlays||0}" min="0" max="20"></div><div class="fg"><label>Tốc độ giọng đọc (1 = bình thường)</label><input type="number" id="lfr" step=".1" value="${c.rate||1}" min=".5" max="1.5"></div></div>
  <label style="display:block;margin:6px 0"><input type="checkbox" id="lfb" ${c.bank!==false?"checked":""}> Hiện ngân hàng từ (word bank)</label><label style="display:block;margin:6px 0"><input type="checkbox" id="lfh" ${c.hint!==false?"checked":""}> Cho phép nút gợi ý (Show Hint)</label><label style="display:block;margin:6px 0"><input type="checkbox" id="lfs" ${c.showAns?"checked":""}> Cho phép Show Answer ngay sau lần kiểm tra đầu</label>
@@ -532,6 +561,7 @@ E.lsToggle=i=>{const k=LC.hide.indexOf(i);k<0?LC.hide.push(i):LC.hide.splice(k,1
 E.lsAuto=()=>{const toks=tok(G("lfx").value),ws=lw(AS.lesson).map(w=>w.en.toLowerCase());const parts=new Set();ws.forEach(w=>w.split(/\s+/).forEach(p=>parts.add(p)));
  LC.hide=[];toks.forEach((t,i)=>{if(!ISWx(t))return;const x=t.toLowerCase();if(parts.has(x)||parts.has(x.replace(/(es|s)$/,"")))LC.hide.push(i)});lsTok();if(!LC.hide.length)toast("Không tìm thấy từ khóa nào trong đoạn văn","err")};
 E.lsClear=()=>{LC.hide=[];lsTok()};
+E.lsFromSents=()=>{const t=ls(AS.lesson).map(s=>s.en).join(" ");if(!t)return toast("Bài chưa có mẫu câu","err");G("lfx").value=t;LC.hide=[];E.lsAuto()};
 E.lsTest=()=>{const t=G("lfx").value;if(TMP.audio)playSrc(TMP.audio);else say(t,num(G("lfr").value,1,.5,1.5))};
 E.lsSave=()=>{const text=G("lfx").value.trim();if(!text)return toast("Hãy nhập đoạn văn","err");if(!LC.hide.length&&!confirm("Chưa chọn từ nào để ẩn. Vẫn lưu?"))return;
  DATA.listen[AS.lesson]={title:G("lft").value.trim()||"Listen and fill in the blanks",text:G("lfx").value,hide:LC.hide.slice().sort((a,b)=>a-b),maxPlays:num(G("lfm").value,0,0,20),rate:num(G("lfr").value,1,.5,1.5),bank:G("lfb").checked,hint:G("lfh").checked,showAns:G("lfs").checked,audio:TMP.audio||""};
@@ -573,6 +603,116 @@ E.exportJson=()=>{DATA.savedAt=Date.now();try{localStorage.setItem(KEY_EDIT,Stri
 E.importJson=f=>{if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||d.app!=="khtn-esl")return toast("Tệp không đúng định dạng ESL","err");
   if(!confirm(`Tệp có ${(d.words||[]).length} từ, ${(d.sents||[]).length} câu. Nhập sẽ THAY THẾ nội dung ESL hiện tại. Tiếp tục?`))return;DATA=norm(d);save();toast("✅ Đã nhập dữ liệu ESL");reload()}catch(e){toast("Không đọc được tệp","err")}};r.readAsText(f)};
 E.reset=()=>{if(!confirm("Xóa TẤT CẢ nội dung ESL? Nên tải esl-data.json sao lưu trước."))return;DATA=blank();save();reload()};
+
+
+/* =====================================================================
+   NHẬP NHANH: 1 tệp Excel cho cả lớp + ghép ảnh/audio tự động theo tên tệp
+   ===================================================================== */
+const rmDia=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/gi,"d").toLowerCase();
+const slug=s=>rmDia(s).replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+const GAMEKEY=[["match","match","ghep"],["guess","guess","doan"],["search","search","tim tu","word search"],["flip","flip","lat the"],["fill","fill","dien tu"],["order","order","sap xep"],["quiz","quiz","trac nghiem"]];
+function gameFromCell(v){const s=rmDia(v).trim();if(!s)return null;if(/^[1-7]$/.test(s))return GORDER[+s-1];for(const k of GAMEKEY)if(k.slice(1).some(x=>s.includes(x)))return k[0];return null}
+const lessonByNo=(g,n)=>lessonsOf(g).find(l=>String(l.no)===String(parseInt(n,10)));
+const yes=v=>/^(x|1|co|có|y|yes|true|on tap|ôn tập)$/i.test(String(v||"").trim());
+const GUIDE=["HƯỚNG DẪN ĐIỀN TỆP MẪU ESL – HỆ THỐNG TỰ HỌC KHTN & SINH HỌC","",
+"Một tệp dùng cho CẢ LỚP. Cột đầu tiên của mọi trang là “Bài (số)” – số thứ tự bài trong trang “Danh mục bài”. Dòng “Ví dụ” sẽ được bỏ qua.","",
+"TỪ KHÓA: mỗi dòng một từ. Cột “Từ ôn tập” ghi x nếu từ này đã học ở bài khác. Hình và audio ghép sau theo tên tệp (xem tab Nhập nhanh).",
+"MẪU CÂU: mỗi dòng một câu, đúng thứ tự muốn hiển thị. Thứ tự này cũng là số 1, 2, 3… khi ghép audio câu (1.mp3, 2.mp3…).",
+"NGHE ĐIỀN TỪ: một dòng cho mỗi bài. Đặt từ cần ẩn trong dấu ngoặc vuông, ví dụ: A [cell] has a [nucleus]. Nếu không đặt ngoặc, hệ thống tự ẩn các từ khóa của bài.",
+"QUIZ: câu hỏi tự soạn cho game Science Quiz. Cột “Đáp án đúng” luôn là đáp án đúng; các cột “Sai” sẽ được xáo trộn khi chơi.",
+"TRÒ CHƠI: ghi tên hoặc số của 3–4 game cho mỗi bài: 1 Match · 2 Guess · 3 Word Search · 4 Flip · 5 Fill · 6 Sentence Order · 7 Quiz. Bài không có dòng sẽ dùng bộ mặc định.","",
+"Nhập lại cùng tệp nhiều lần là an toàn: từ khóa được cập nhật (giữ hình/audio đã có), mẫu câu – bài nghe – quiz – game của bài có trong tệp sẽ được thay mới.",
+"Gợi ý: soạn bài nào nhập bài đó; có thể để trống các trang không dùng."];
+const SH={w:["Từ khóa",["Bài (số)","English","IPA","Nghĩa tiếng Việt","Câu ví dụ","Mô tả tiếng Anh (không bắt buộc)","Từ ôn tập (x)"],[10,22,22,26,44,40,12]],
+ s:["Mẫu câu",["Bài (số)","Câu tiếng Anh","Nghĩa tiếng Việt"],[10,60,60]],
+ l:["Nghe điền từ",["Bài (số)","Tiêu đề","Đoạn văn – từ cần ẩn đặt trong [ ]","Số lần nghe tối đa (0 = không giới hạn)"],[10,30,90,18]],
+ q:["Quiz",["Bài (số)","Câu hỏi","Đáp án đúng","Sai 1","Sai 2","Sai 3"],[10,50,24,24,24,24]],
+ g:["Trò chơi",["Bài (số)","Game 1","Game 2","Game 3","Game 4"],[10,16,16,16,16]]};
+function sheetOf(k,rows){const[n,h,w]=SH[k];return{name:n,head:h,rows,widths:w}}
+function catSh(g){const rows=[["Số bài","Tên bài","Chương"],...lessonsOf(g).map(l=>[l.no,l.name,l.ch.name])];return{name:"Danh mục bài",xml:sheetXml(rows,{widths:[10,60,50],style:ri=>ri===0?1:2})}}
+const guideRows=()=>GUIDE;
+E.tplXlsx=()=>{const g=AS.g,no=(lessonsOf(g)[0]||{no:1}).no;
+ const sheets=[sheetOf("w",[["Ví dụ","cell","sel","tế bào","A cell is very small.","The basic unit of life.",""],["Ví dụ","nucleus","ˈnjuːkliəs","nhân tế bào","The nucleus controls the cell.","",""],...Array.from({length:10},()=>[""])]),
+  sheetOf("s",[["Ví dụ","A cell grows before it divides.","Tế bào lớn lên trước khi phân chia."],...Array.from({length:5},()=>[""])]),
+  sheetOf("l",[["Ví dụ","Listen and fill in the blanks","A [cell] has a [nucleus]. The [membrane] protects the cell.",2],...Array.from({length:3},()=>[""])]),
+  sheetOf("q",[["Ví dụ","What does the nucleus do?","It controls the cell","It makes energy","It stores water","It gives color"],...Array.from({length:5},()=>[""])]),
+  sheetOf("g",[["Ví dụ","1 Match","4 Flip","6 Sentence Order","5 Fill"],...Array.from({length:3},()=>[""])]),catSh(g)];
+ download(buildWorkbook(sheets,GUIDE),`Mau-ESL-${gName(g).replace(" ","")}.xlsx`);toast("✅ Đã tải mẫu Excel ESL. Điền xong thì nhập lại ở tab này.")};
+/* ---- xuất nội dung hiện có ra Excel (để sửa hàng loạt rồi nhập lại) ---- */
+function bracketText(c){const toks=tok(c.text),hide=new Set(c.hide||[]);return toks.map((t,i)=>hide.has(i)?"["+t+"]":t).join("")}
+E.exportXlsx=()=>{const g=AS.g,ls_=lessonsOf(g),W=[],Sn=[],L=[],Q=[],Gm=[];
+ ls_.forEach(l=>{lw(l.id).forEach(w=>W.push([l.no,w.en,w.ipa||"",w.vi,w.ex||"",w.def||"",w.rev?"x":""]));ls(l.id).forEach(s=>Sn.push([l.no,s.en,s.vi||""]));
+  const c=DATA.listen[l.id];if(c&&c.text)L.push([l.no,c.title||"",bracketText(c),c.maxPlays||0]);
+  const arr=DATA.games[l.id];if(Array.isArray(arr)){Gm.push([l.no,...arr.map(x=>GAMEDEF[x.type].name)]);}
+  const qq=(DATA.quiz[l.id]||"")+"\n"+(Array.isArray(arr)&&arr.find(x=>x.type==="quiz")?arr.find(x=>x.type==="quiz").cfg.qs||"":"");qq.split(/\r?\n/).forEach(line=>{const p=line.split("|").map(x=>x.trim());if(p.length>=3)Q.push([l.no,...p])})});
+ if(!W.length&&!Sn.length&&!L.length)return toast("Lớp này chưa có nội dung ESL để xuất","err");
+ download(buildWorkbook([sheetOf("w",W),sheetOf("s",Sn),sheetOf("l",L),sheetOf("q",Q),sheetOf("g",Gm),catSh(g)],GUIDE),`ESL-${gName(g).replace(" ","")}-${new Date().toISOString().slice(0,10)}.xlsx`);toast("✅ Đã xuất nội dung ESL ra Excel")};
+
+/* ---- đọc tệp Excel thành "kế hoạch nhập" ---- */
+let PLAN=null;
+function autoHide(text,lid){const parts=new Set();lw(lid).forEach(w=>w.en.toLowerCase().split(/\s+/).forEach(p=>parts.add(p)));
+ const toks=tok(text),h=[];toks.forEach((t,i)=>{if(!ISWx(t))return;const x=t.toLowerCase();if(parts.has(x)||parts.has(x.replace(/(es|s)$/,"")))h.push(i)});return h}
+function parseBracket(raw){const clean=[],ranges=[];let out="",i=0;raw=String(raw||"");
+ while(i<raw.length){const a=raw.indexOf("[",i);if(a<0){out+=raw.slice(i);break}const b=raw.indexOf("]",a);if(b<0){out+=raw.slice(i);break}out+=raw.slice(i,a);const s=out.length;out+=raw.slice(a+1,b);ranges.push([s,out.length]);i=b+1}
+ const toks=tok(out),hide=[];let pos=0;toks.forEach((t,k)=>{const s=pos,e=pos+t.length;pos=e;if(ISWx(t)&&ranges.some(([a,b])=>s>=a&&e<=b))hide.push(k)});return{text:out,hide}}
+async function readPlan(file){const g=AS.g,sh=await xlsxSheets(await file.arrayBuffer()),P={g,words:[],sents:[],listen:[],quiz:[],games:[],errors:[],warns:[],lessons:new Set()};
+ const find=re=>sh.find(x=>re.test(rmDia(x.name)));
+ const rowsOf=(x,cb)=>{if(!x)return;x.rows.slice(1).forEach((r,i)=>{const a=String(r[0]??"").trim();if(!a||/^vi du/i.test(rmDia(a)))return;const l=lessonByNo(g,a);if(!l){P.errors.push(`Trang “${x.name}”, dòng ${i+2}: không có bài số “${a}” ở ${gName(g)}.`);return}P.lessons.add(l.id);cb(l,r.map(c=>String(c??"").trim()),i+2)})};
+ rowsOf(find(/tu khoa/),(l,r,n)=>{if(!r[1]||!r[3]){P.errors.push(`Từ khóa, dòng ${n}: thiếu English hoặc nghĩa tiếng Việt.`);return}P.words.push({lid:l.id,en:r[1],ipa:r[2],vi:r[3],ex:r[4],def:r[5],rev:yes(r[6])})});
+ rowsOf(find(/mau cau/),(l,r,n)=>{if(!r[1]){return}P.sents.push({lid:l.id,en:r[1],vi:r[2]})});
+ rowsOf(find(/nghe/),(l,r,n)=>{if(!r[2]){P.errors.push(`Nghe điền từ, dòng ${n}: thiếu đoạn văn.`);return}const hasB=/\[[^\]]+\]/.test(r[2]);let t,h;if(hasB){const x=parseBracket(r[2]);t=x.text;h=x.hide}else{t=r[2];h=null}P.listen.push({lid:l.id,title:r[1]||"Listen and fill in the blanks",text:t,hide:h,maxPlays:Math.max(0,parseInt(r[3],10)||0)})});
+ rowsOf(find(/quiz/),(l,r,n)=>{const p=r.slice(1).filter(Boolean);if(p.length<3){P.errors.push(`Quiz, dòng ${n}: cần câu hỏi, đáp án đúng và ít nhất 1 đáp án sai.`);return}P.quiz.push({lid:l.id,line:p.join(" | ")})});
+ rowsOf(find(/tro choi/),(l,r,n)=>{const ts=[];r.slice(1).forEach(c=>{if(!c)return;const t=gameFromCell(c);if(!t)P.warns.push(`Trò chơi, dòng ${n}: không hiểu “${c}”.`);else if(!ts.includes(t))ts.push(t)});if(ts.length)P.games.push({lid:l.id,types:ts})});
+ const nw={};P.words.forEach(w=>{if(!w.rev)nw[w.lid]=(nw[w.lid]||0)+1});Object.entries(nw).forEach(([k,v])=>{if(v>12)P.warns.push(`${lessonShort(k)}: ${v} từ khóa mới (nên khoảng 10).`)});
+ P.words.forEach(w=>{const o=DATA.words.find(x=>x.en.toLowerCase()===w.en.toLowerCase()&&x.lesson!==w.lid);if(o&&!w.rev&&!P.words.some(x=>x!==w&&x.lid===o.lesson&&x.en.toLowerCase()===w.en.toLowerCase()))P.warns.push(`“${w.en}” đã có ở “${lessonShort(o.lesson)}” → sẽ nhập thành từ ÔN TẬP.`)});
+ return P}
+function applyPlan(P){let nw=0,uw=0,nr=0;
+ P.words.forEach(w=>{const same=DATA.words.find(x=>x.lesson===w.lid&&x.en.toLowerCase()===w.en.toLowerCase());
+  if(same){["ipa","vi","ex","def"].forEach(k=>{if(w[k])same[k]=w[k]});if(w.rev)same.rev=true;uw++}
+  else{const other=DATA.words.find(x=>x.en.toLowerCase()===w.en.toLowerCase());const rev=w.rev||!!other;if(rev&&!w.rev)nr++;DATA.words.push({id:uid("w"),lesson:w.lid,en:w.en,ipa:w.ipa,vi:w.vi,ex:w.ex,def:w.def,img:"",audio:"",rev});nw++}});
+ const sl=new Set(P.sents.map(s=>s.lid));sl.forEach(lid=>{const old=ls(lid);DATA.sents=DATA.sents.filter(s=>s.lesson!==lid);P.sents.filter(s=>s.lid===lid).forEach((s,i)=>DATA.sents.push({id:uid("s"),lesson:lid,en:s.en,vi:s.vi,audio:old[i]&&old[i].en===s.en?old[i].audio||"":(old[i]?old[i].audio||"":"")}))});
+ P.listen.forEach(c=>{const old=DATA.listen[c.lid]||{};const hide=c.hide||autoHide(c.text,c.lid);DATA.listen[c.lid]={title:c.title,text:c.text,hide,maxPlays:c.maxPlays,rate:old.rate||1,bank:old.bank!==false,hint:old.hint!==false,showAns:!!old.showAns,audio:old.audio||""}});
+ new Set(P.quiz.map(q=>q.lid)).forEach(lid=>{DATA.quiz[lid]=P.quiz.filter(q=>q.lid===lid).map(q=>q.line).join("\n")});
+ P.games.forEach(x=>{const old=Array.isArray(DATA.games[x.lid])?DATA.games[x.lid]:[];DATA.games[x.lid]=x.types.map(t=>{const o=old.find(y=>y.type===t);return o||{type:t,cfg:gcfgDefault(t)}})});
+ save();return{nw,uw,nr}}
+E.xlsPick=async el=>{const f=el.files[0];el.value="";if(!f)return;if(!/\.xlsx$/i.test(f.name))return toast("Hãy chọn tệp .xlsx (Excel). Tệp .xls cũ: mở và “Lưu thành” .xlsx.","err");
+ try{PLAN=await readPlan(f);PLAN.name=f.name;E.admin()}catch(e){console.error(e);toast("Không đọc được tệp: "+e.message,"err")}};
+E.planApply=()=>{if(!PLAN)return;const r=applyPlan(PLAN);toast(`✅ Đã nhập: ${r.nw} từ mới, ${r.uw} từ cập nhật${r.nr?`, ${r.nr} từ ôn tập`:""}, ${PLAN.sents.length} câu, ${PLAN.listen.length} bài nghe, ${PLAN.quiz.length} câu quiz, ${PLAN.games.length} bài chọn game`);PLAN=null;E.admin()};
+E.planCancel=()=>{PLAN=null;E.admin()};
+
+/* ---- ghép ảnh / audio theo tên tệp ---- */
+let MEDIA=[];
+const isImg=f=>/^image\//.test(f.type)||/\.(png|jpe?g|gif|webp|bmp)$/i.test(f.name),isAud=f=>/^audio\//.test(f.type)||/\.(mp3|wav|m4a|ogg|oga|aac)$/i.test(f.name);
+function matchFile(f,lessonId){const base=f.name.replace(/\.[^.]+$/,"");let b=slug(base),lid=lessonId,pref="";
+ const m=/^b(\d+)-(.+)$/.exec(b);if(m){const l=lessonByNo(AS.g,m[1]);if(!l)return{f,ok:false,why:`Không có bài số ${m[1]}`};lid=l.id;b=m[2];pref=` (bài ${m[1]})`}
+ if(!lid)return{f,ok:false,why:"Chưa chọn bài (hoặc đặt tên B3_từ.jpg)"};
+ const img=isImg(f),aud=isAud(f);if(!img&&!aud)return{f,ok:false,why:"Không phải ảnh/audio"};
+ const ws=lw(lid),sn=ls(lid);let k;
+ if(aud&&/^(nghe|listen|listening|doan-van|passage|reading|bai-doc|doc|audio)$/.test(b)){return DATA.listen[lid]?{f,ok:true,t:{k:"listen",lid},desc:`Audio bài nghe${pref}`}:{f,ok:false,why:"Bài này chưa có hoạt động Nghe & điền từ"}}
+ if((k=/^(?:t|tu|w|word)-?(\d+)$/.exec(b))||(img&&(k=/^(\d+)$/.exec(b)))){const n=+k[1],w=ws[n-1];return w?{f,ok:true,t:{k:img?"wimg":"waud",id:w.id},desc:`${img?"Hình":"Audio"} của từ ${n}: ${w.en}${pref}`}:{f,ok:false,why:`Bài chỉ có ${ws.length} từ`}}
+ if(aud&&(k=/^(?:c|cau|s|sent|sentence)?-?(\d+)$/.exec(b))){const n=+k[1],s=sn[n-1];return s?{f,ok:true,t:{k:"saud",id:s.id},desc:`Audio mẫu câu ${n}: “${s.en.slice(0,28)}…”${pref}`}:{f,ok:false,why:`Bài chỉ có ${sn.length} mẫu câu`}}
+ const w=ws.find(x=>slug(x.en)===b);if(w)return{f,ok:true,t:{k:img?"wimg":"waud",id:w.id},desc:`${img?"Hình":"Audio"} của từ “${w.en}”${pref}`};
+ return{f,ok:false,why:"Tên không khớp từ khóa nào của bài"+(pref||" đã chọn")}}
+E.mediaPick=el=>{MEDIA=[...el.files].map(f=>matchFile(f,AS.lesson));el.value="";E.admin()};
+E.mediaApply=async()=>{let n=0;const ok=MEDIA.filter(m=>m.ok);const btn=G("mapply");
+ for(let i=0;i<ok.length;i++){const m=ok[i],t=m.t;if(btn)btn.textContent=`⏳ ${i+1}/${ok.length}…`;
+  try{if(t.k==="wimg"){wById(t.id).img=await shrinkImage(await readDataURL(m.f),560,.8)}
+   else{const d=await readDataURL(m.f);if(t.k==="waud")wById(t.id).audio=d;else if(t.k==="saud")DATA.sents.find(s=>s.id===t.id).audio=d;else if(t.k==="listen")DATA.listen[t.lid].audio=d}n++}catch(e){console.warn(e)}}
+ save();MEDIA=[];toast(`✅ Đã ghép ${n}/${ok.length} tệp`);E.admin()};
+E.mediaCancel=()=>{MEDIA=[];E.admin()};
+
+/* ---- giao diện tab Nhập nhanh ---- */
+function importAdm(l){const P=PLAN;
+ const planUI=P?`<div class="card" style="border:2px solid #86efac"><h3>🔍 Xem trước: ${esc(P.name)}</h3><p>Áp dụng cho <b>${esc(gName(P.g))}</b> · ${P.lessons.size} bài: <b>${P.words.length}</b> từ khóa · <b>${P.sents.length}</b> mẫu câu · <b>${P.listen.length}</b> bài nghe · <b>${P.quiz.length}</b> câu quiz · <b>${P.games.length}</b> bài chọn game.</p>
+  ${P.errors.length?`<div class="efb hint"><b>${P.errors.length} lỗi (các dòng này sẽ bị bỏ qua):</b><br>${P.errors.slice(0,12).map(esc).join("<br>")}</div>`:""}${P.warns.length?`<div class="efb hint"><b>Lưu ý:</b><br>${P.warns.slice(0,12).map(esc).join("<br>")}</div>`:""}
+  <div class="row" style="margin-top:8px"><button class="btn" onclick="ESL.planApply()" ${P.words.length+P.sents.length+P.listen.length+P.quiz.length+P.games.length?"":"disabled"}>✅ Nhập vào hệ thống</button><button class="btn sec" onclick="ESL.planCancel()">Hủy</button></div></div>`:"";
+ const mUI=MEDIA.length?`<div class="card" style="border:2px solid #86efac"><h3>🔍 Xem trước ghép tệp</h3><div style="max-height:300px;overflow:auto"><table class="t"><tr><th>Tệp</th><th>Sẽ ghép vào</th></tr>${MEDIA.map(m=>`<tr><td>${esc(m.f.name)}</td><td>${m.ok?`✅ ${esc(m.desc)}`:`<span class="bad2">⚠ ${esc(m.why)}</span>`}</td></tr>`).join("")}</table></div><div class="row" style="margin-top:8px"><button class="btn" id="mapply" onclick="ESL.mediaApply()" ${MEDIA.some(m=>m.ok)?"":"disabled"}>✅ Ghép ${MEDIA.filter(m=>m.ok).length} tệp</button><button class="btn sec" onclick="ESL.mediaCancel()">Hủy</button></div></div>`:"";
+ return `<p class="muted">Soạn học liệu nhanh: <b>1 tệp Excel cho cả lớp</b> + <b>chọn nhiều ảnh/audio một lần</b>. Đang làm việc với <b>${esc(gName(AS.g))}</b>${l?` · bài đã chọn: <b>${esc(lessonShort(l.id))}</b>`:""}.</p>
+ ${planUI}${mUI}
+ <div class="grid2"><div class="card"><h3>① Excel – từ khóa, mẫu câu, bài nghe, quiz, chọn game</h3><ol class="muted" style="margin:0 0 8px 18px;padding:0"><li>Tải mẫu Excel của ${esc(gName(AS.g))} (có sẵn danh mục bài).</li><li>Điền các trang cần dùng (mỗi dòng ghi số bài).</li><li>Tải lên – xem trước – bấm “Nhập vào hệ thống”.</li></ol><div class="row"><button class="btn" onclick="ESL.tplXlsx()">⬇ Tải mẫu Excel</button><button class="btn blue" onclick="G_('xlsIn').click()">📤 Tải Excel lên</button><button class="btn sec" onclick="ESL.exportXlsx()">📑 Xuất nội dung hiện có ra Excel</button><input type="file" id="xlsIn" accept=".xlsx" class="hidden" onchange="ESL.xlsPick(this)"></div><p class="muted" style="font-size:13px;margin-top:8px">Nhập lại nhiều lần an toàn: từ khóa được cập nhật, giữ nguyên hình/audio đã ghép. Có thể “Xuất ra Excel” → sửa hàng loạt → nhập lại.</p></div>
+ <div class="card"><h3>② Ảnh &amp; audio – ghép tự động theo tên tệp</h3><p class="muted" style="margin:0 0 6px">Chọn <b>bài ở trên</b>, rồi chọn nhiều tệp một lần. Tên tệp quy ước:</p><table class="t" style="font-size:13px"><tr><th>Tên tệp</th><th>Ghép vào</th></tr>
+ <tr><td><code>cell.jpg</code> · <code>cell.mp3</code></td><td>Hình / audio của từ <b>cell</b></td></tr><tr><td><code>1.jpg</code> … <code>10.jpg</code></td><td>Hình của từ thứ 1…10 trong bài</td></tr><tr><td><code>1.mp3</code> … <code>5.mp3</code></td><td>Audio của <b>mẫu câu</b> thứ 1…5</td></tr><tr><td><code>tu1.mp3</code> (hoặc <code>w1</code>)</td><td>Audio của từ thứ 1</td></tr><tr><td><code>nghe.mp3</code> (hoặc <code>listen</code>, <code>doan-van</code>)</td><td>Audio <b>đoạn nghe &amp; điền từ</b></td></tr><tr><td><code>B3_cell.jpg</code></td><td>Từ cell của <b>bài 3</b> (không cần chọn bài)</td></tr></table>
+ <div class="row" style="margin-top:8px"><button class="btn blue" onclick="G_('medIn').click()">🖼🎵 Chọn nhiều ảnh / audio</button><input type="file" id="medIn" accept="image/*,audio/*" multiple class="hidden" onchange="ESL.mediaPick(this)"></div><p class="muted" style="font-size:13px;margin-top:8px">Ảnh tự thu nhỏ cho nhẹ. Không có audio thì hệ thống tự đọc bằng giọng máy.</p></div></div>`}
 
 /* ---------- kết thúc module ---------- */
 })();
