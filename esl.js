@@ -535,12 +535,14 @@ E.admin=function(){E.preview=false;
  const tabNeedsLesson=["v","s","g","l","p","x"].includes(AS.tab),showSel=tabNeedsLesson||AS.tab==="i",l=AS.lesson?findLesson(AS.lesson):null;
  const dirty=Number(localStorage.getItem(KEY_EDIT)||0)>Number(localStorage.getItem(KEY_PUB)||0)&&(DATA.words.length||DATA.sents.length);
  G("main").innerHTML=`<div class="card esl"><h2>🔤 SCIENCE ESL – Quản lý nội dung</h2>${dirty?`<div class="efb hint" style="margin-bottom:8px">⚠ Nội dung ESL có thay đổi CHƯA xuất bản. Vào tab <b>💾 Dữ liệu</b> → “Tải esl-data.json” rồi tải lên GitHub cùng thư mục với index.html.</div>`:""}
- <div class="row" style="margin-bottom:10px">${gradeSeg(AS.g,"ESL.pickGrade")}${showSel?`<select id="esLs" onchange="ESL.pickLesson(this.value)" style="min-width:230px;max-width:100%"><option value="">— Chọn bài học —</option>${lessonOpts()}</select>`:""}</div>
+ <div class="row" style="margin-bottom:10px">${gradeSeg(AS.g,"ESL.pickGrade")}${showSel?`<select id="esLs" onchange="ESL.pickLesson(this.value)" style="min-width:230px;max-width:100%"><option value="">— Chọn bài học —</option>${lessonOpts()}</select><button class="btn sec sm" ${adjL(-1)?`onclick="ESL.admNav(-1)"`:"disabled"}>◀ BÀI TRƯỚC ĐÓ</button><button class="btn sm" ${adjL(1)?`onclick="ESL.admNav(1)"`:"disabled"}>BÀI TIẾP THEO ▶</button>`:""}</div>
  <div class="tabs" style="margin-bottom:10px">${ATABS.map(([k,n])=>`<button class="${AS.tab===k?"on":""}" onclick="ESL.admTab('${k}')">${n}</button>`).join("")}</div>
  <div id="eadm">${tabNeedsLesson&&!l?`<div class="empty">Hãy chọn lớp và bài học ở trên để soạn nội dung ESL.</div>`:AS.tab==="i"?importAdm(l):AS.tab==="x"?itemsAdm(l):AS.tab==="v"?vocabAdm(l):AS.tab==="s"?sentAdm(l):AS.tab==="g"?gameAdm(l):AS.tab==="l"?listenAdm(l):AS.tab==="p"?`<div id="eslpv"></div>`:AS.tab==="r"?reportAdm():dataAdm()}</div></div>`;
  if(AS.tab==="p"&&l){E.lesson(l,G("eslpv"),true)}
  if(AS.tab==="l"&&l)lsBindTokens()};
 E.pickGrade=g=>{AS.g=g;AS.lesson=null;E.admin()};
+const adjL=d=>{const a=chaptersOf(AS.g).flatMap(c=>c.lessons),i=a.findIndex(x=>x.id===AS.lesson);return i<0?(d>0?a[0]:null):a[i+d]};
+E.admNav=d=>{const n=adjL(d);if(n){AS.lesson=n.id;const y=scrollY;E.admin();scrollTo(0,y)}};
 E.pickLesson=id=>{AS.lesson=id||null;E.admin()};
 E.admTab=k=>{AS.tab=k;E.admin()};
 const reload=()=>E.admin();
